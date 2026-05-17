@@ -1,6 +1,7 @@
+"use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 
-const SB_URL="https://YOUR_PROJECT.supabase.co", SB_KEY="YOUR_ANON_KEY", ADMIN_PASS="Alcana2024", LK="alcana_v5";
+const SB_URL= process.env.NEXT_PUBLIC_SUPABASE_URL, SB_KEY= process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, ADMIN_PASS=Alcana2024, LK=alcana_v5;
 
 // ─── PREMIUM CSS ───────────────────────────────────────────
 const CSS=`
