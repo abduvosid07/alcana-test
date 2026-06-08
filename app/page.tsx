@@ -572,7 +572,7 @@ export default function App(){
                         <td style={{fontWeight:700,color:cl}}>{Math.round((r.score/30)*100)}%</td>
                         <td style={{textAlign:"center",color:"#9ca3af",fontWeight:500}}>{r.attempt}</td>
                         <td><span className={cls}>{lbl}</span></td>
-                        <td style={{color:"#9ca3af",fontSize:12.5}}>{r.created_at?new Date(r.created_at).toLocaleDateString():r.date||\"\"}</td>
+                        <td style={{color:"#9ca3af",fontSize:12.5}}>{r.created_at?new Date(r.created_at).toLocaleDateString():r.date||""}</td>
                       </tr>
                     );
                   })}
