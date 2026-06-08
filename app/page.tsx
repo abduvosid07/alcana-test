@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { listSectionsWithQuestions, type DbSection } from "../lib/quizApi";
 
 // Force Next.js to render this strictly on demand to fix build loops
 export const dynamic = "force-dynamic";
@@ -307,6 +308,8 @@ export default function App(){
   const [sbSt,setSbSt]=useState("local");
   const [langOpen,setLangOpen]=useState(false);
   const [catS,setCatS]=useState<any>({});
+  const [dbSections,setDbSections]=useState<DbSection[]>([]);
+  const [activeDbSection,setActiveDbSection]=useState<DbSection|null>(null);
   const actx=useRef<any>(null);const stopO=useRef<any>(null);
 
   useEffect(() => {
@@ -319,6 +322,7 @@ export default function App(){
   useEffect(()=>{if (typeof window !== "undefined") localStorage.setItem("al_lang",lang);},[lang]);
   useEffect(()=>()=>{if(stopO.current)stopO.current();if(actx.current)actx.current.close();},[]);
   useEffect(()=>{const h=()=>setLangOpen(false);if(langOpen)document.addEventListener("click",h);return()=>document.removeEventListener("click",h);},[langOpen]);
+  useEffect(()=>{listSectionsWithQuestions().then(setDbSections).catch(e=>console.error("dbSections:",e));},[]);
 
   const toggleMusic=useCallback(()=>{
     if(music){if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);}
@@ -328,6 +332,8 @@ export default function App(){
   const showToast=msg=>{setToast(msg);setTv(true);setTimeout(()=>setTv(false),1600);};
   const nav=(fn,dir=1)=>{setSd(dir);setSk(k=>k+1);fn();};
   const startTest=useCallback((name,surname)=>{setCand({name,surname});setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));},[]);
+  const pickDbSection=(s:DbSection)=>{if(!s.questions||s.questions.length===0)return;setActiveDbSection(s);showToast("✓ Enter your name below to start");};
+  const pickDefaultSection=()=>{setActiveDbSection(null);};
   const selAns=oi=>{setAnswers(p=>({...p,[cur]:oi}));showToast(T[lang].mot[Math.floor(Math.random()*T[lang].mot.length)]);};
   const clrAns=()=>setAnswers(p=>{const n={...p};delete n[cur];return n;});
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
@@ -403,6 +409,40 @@ export default function App(){
         </div>
       </section>
       <div style={{maxWidth:640,margin:"0 auto",padding:"8px 16px 48px"}}>
+        {(dbSections.length>0)&&(
+          <div className="au" style={{marginBottom:16}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#374151",marginBottom:10,letterSpacing:".02em"}}>
+              {lang==="ru"?"ВЫБЕРИТЕ ТЕСТ":lang==="en"?"CHOOSE A TEST":"TESTNI TANLANG"}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10,marginBottom:8}}>
+              <button
+                onClick={pickDefaultSection}
+                className="card"
+                style={{textAlign:"left",cursor:"pointer",padding:14,border:activeDbSection===null?"2px solid #16a34a":"1.5px solid #e5e7eb",background:activeDbSection===null?"#f0fdf4":"#fff",fontFamily:"inherit"}}
+              >
+                <div style={{fontWeight:800,fontSize:14,color:"#111827"}}>Alcana Group</div>
+                <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 15 {lang==="ru"?"мин":lang==="en"?"min":"daqiqa"}</div>
+              </button>
+              {dbSections.map(s=>{
+                const title=lang==="ru"?s.title_ru:lang==="en"?s.title_en:s.title_uz;
+                const qc=s.questions?.length||0;
+                const isActive=activeDbSection?.id===s.id;
+                return(
+                  <button
+                    key={s.id}
+                    onClick={()=>pickDbSection(s)}
+                    disabled={qc===0}
+                    className="card"
+                    style={{textAlign:"left",cursor:qc===0?"not-allowed":"pointer",padding:14,opacity:qc===0?.5:1,border:isActive?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isActive?"#f0fdf4":"#fff",fontFamily:"inherit"}}
+                  >
+                    <div style={{fontWeight:800,fontSize:14,color:"#111827"}}>{title}</div>
+                    <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{qc} {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · {s.time_limit_minutes} {lang==="ru"?"мин":lang==="en"?"min":"daqiqa"}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         <div className="au"><NameForm t={t.home} onStart={startTest}/></div>
       </div>
     </div>
