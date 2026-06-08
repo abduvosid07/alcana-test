@@ -391,7 +391,7 @@ export default function App(){
         <div className="hero-g1"></div><div className="hero-g2"></div><div className="hero-grid"></div>
         <div style={{position:"relative",zIndex:10,maxWidth:640,margin:"0 auto"}}>
           <div style={{display:"inline-flex",alignItems:"center",background:"rgba(34,197,94,.14)",color:"#4ade80",padding:"6px 14px",borderRadius:20,fontSize:12.5,fontWeight:700,letterSpacing:".04em",marginBottom:24,border:"1px solid rgba(34,197,94,.2)"}}>✨ {t.home.badge.toUpperCase()}</div>
-          <h1 style={{fontSize:46,fontWeight:900,color:#ffffff,letterSpacing:"-.03em",lineHeight:1.1,marginBottom:14}}>{t.home.hero}</h1>
+          <h1 style={{fontSize:46,fontWeight:900,color:"#ffffff",letterSpacing:"-.03em",lineHeight:1.1,marginBottom:14}}>{t.home.hero}</h1>
           <p style={{fontSize:17,color:"#a7f3d0",fontWeight:500,maxWidth:480,margin:"0 auto 28px",lineHeight:1.5}}>{t.home.sub}</p>
           <div style={{display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
             <div className="glass-card"><p style={{fontSize:12,color:"#93c5fd",fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",marginBottom:4}}>🎯 CRITERIA</p><p style={{fontSize:15,color:"#fff",fontWeight:700}}>27+ {t.home.s27} / 20+ {t.home.s20}</p></div>
@@ -511,7 +511,7 @@ export default function App(){
           <h2 style={{fontSize:20,fontWeight:800,color:"#111827",marginBottom:6}}>{t.adm.title}</h2>
           <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}>{t.adm.sub}</p>
           <input type="password" className="inp" value={ap} placeholder={t.adm.pLbl} onChange={e=>setAp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doLogin()} style={{textAlign:"center",letterSpacing:"4px",fontSize:18,marginBottom:12}}/>
-          {ae&&<div style={{color:#dc2626,fontSize:13,fontWeight:600,marginBottom:12}}>{ae}</div>}
+          {ae&&<div style={{color:"#dc2626",fontSize:13,fontWeight:600,marginBottom:12}}>{ae}</div>}
           <div style={{display:"flex",gap:8,marginTop:6}}>
             <button className="btn btn-s" onClick={goHome} style={{flex:1}}>←</button>
             <button className="btn btn-p" onClick={doLogin} style={{flex:2}}>{t.adm.login}</button>
