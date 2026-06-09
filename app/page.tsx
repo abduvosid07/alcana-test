@@ -112,11 +112,42 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;-
 `;
 
 // ─── TRANSLATIONS ──────────────────────────────────────────
-const T={
+// ─── LATIN → CYRILLIC UZBEK TRANSLITERATION ───────────────
+function toCyrl(s:string):string{
+  if(!s||typeof s!=="string")return s;
+  let out=s;
+  // multi-char digraphs first
+  const multi:[string,string][]=[
+    ["yo'","йў"],["Yo'","Йў"],["YO'","ЙЎ"],
+    ["g'","ғ"],["G'","Ғ"],
+    ["o'","ў"],["O'","Ў"],
+    ["sh","ш"],["Sh","Ш"],["SH","Ш"],
+    ["ch","ч"],["Ch","Ч"],["CH","Ч"],
+    ["yo","ё"],["Yo","Ё"],["YO","Ё"],
+    ["yu","ю"],["Yu","Ю"],["YU","Ю"],
+    ["ya","я"],["Ya","Я"],["YA","Я"],
+  ];
+  for(const[a,b]of multi)out=out.split(a).join(b);
+  const map:Record<string,string>={a:"а",b:"б",c:"ц",d:"д",e:"е",f:"ф",g:"г",h:"ҳ",i:"и",j:"ж",k:"к",l:"л",m:"м",n:"н",o:"о",p:"п",q:"қ",r:"р",s:"с",t:"т",u:"у",v:"в",w:"в",x:"х",y:"й",z:"з",A:"А",B:"Б",C:"Ц",D:"Д",E:"Е",F:"Ф",G:"Г",H:"Ҳ",I:"И",J:"Ж",K:"К",L:"Л",M:"М",N:"Н",O:"О",P:"П",Q:"Қ",R:"Р",S:"С",T:"Т",U:"У",V:"В",W:"В",X:"Х",Y:"Й",Z:"З","'":"ъ"};
+  out=out.replace(/[a-zA-Z']/g,c=>map[c]||c);
+  return out;
+}
+function deepCyrl(o:any):any{
+  if(o===null||o===undefined)return o;
+  if(typeof o==="string")return toCyrl(o);
+  if(Array.isArray(o))return o.map(deepCyrl);
+  if(typeof o==="object"){const r:any={};for(const k in o)r[k]=deepCyrl(o[k]);return r;}
+  return o;
+}
+
+const T:any={
   uz:{lang:"🇺🇿 O'zbek",h:{admin:"Admin",mus:"🌊 Musiqa",musOff:"🔇 Musiqa",exit:"Chiqish"},home:{badge:"Yangi Xodim Testi",hero:"Alcana Group",sub:"Onboarding Assessment Platform",dur:"30 savol · ~15 daqiqa",info:"Ma'lumotlaringizni kiriting",fnL:"Ism",fnP:"Ismingiz...",lnL:"Familiya",lnP:"Familiyangiz...",start:"Testni Boshlash →",err:"Iltimos, ism va familiyangizni kiriting!",hint:"Tinch okean musiqasi uchun yuqoridagi tugmani bosing 🌊",s27:"O'tdi",s20:"Qayta",s0:"O'tmadi"},test:{q:"Savol",ans:"javoblandi",prev:"← Oldingi",next:"Keyingi →",sub:"Testni Yakunlash",unans:"ta javobsiz",jump:"Tez o'tish:",clear:"Javobni o'zgartirish",att:"urinish"},res:{cong:"Tabriklaymiz!",again:"Yana bir bor!",sorry:"Afsuski...",passM:"🎉 Siz Alcana Group jamoasiga to'liq loyiqsiz! HR bo'limi siz bilan tez orada bog'lanadi.",retryM:"Siz chegaradan o'tdingiz! Materiallarni qayta o'qib chiqing va ikkinchi urinishda muvaffaqiyat qozing.",failM:"Bu safar kutilgan natijaga erisha olmadingiz. Kuchingizni to'plab, keyinroq qayta murojaat qilishingiz mumkin.",retry:"🔄 Qayta urinish",home:"🏠 Bosh sahifa",cloud:"☁️ Bulutga saqlandi",local:"💾 Qurilmaga saqlandi",cats:["Kompaniya","Qadriyatlar","HR Siyosat","Xulq-Atvor","Innovatsiya"]},adm:{title:"Admin Boshqaruv Paneli",pLbl:"Parolni kiriting...",login:"Kirish →",wrong:"❌ Noto'g'ri parol!",tot:"Jami",pass:"O'tdi",ret:"Qayta",fail:"O'tmadi",all:"Barchasi",search:"Ism bo'yicha...",none:"Natija topilmadi",hdrs:["#","Ism Familiya","Ball","%","Urinish","Holat","Sana"],exp:"📊 CSV",clr:"🗑️ Tozalash",pL:"✅ O'tdi",rL:"⚠️ Qayta",fL:"❌ O'tmadi",sub:"Faqat vakolatli menejerlar",sb:"☁️ Supabase",lc:"💾 Mahalliy"},mot:["Ajoyib! 🌊","Zo'r! ✨","Davom eting! 💪","A'lo! 🎯","Kuchli! 🔥","Olg'a! 🚀"]},
   ru:{lang:"🇷🇺 Русский",h:{admin:"Админ",mus:"🌊 Музыка",musOff:"🔇 Музыка",exit:"Выход"},home:{badge:"Тест нового сотрудника",hero:"Alcana Group",sub:"Платформа адаптации сотрудников",dur:"30 вопросов · ~15 минут",info:"Введите ваши данные",fnL:"Имя",fnP:"Ваше имя...",lnL:"Фамилия",lnP:"Ваша фамилия...",start:"Начать тест →",err:"Пожалуйста, введите имя и фамилию!",hint:"Нажмите кнопку выше для звуков океана 🌊",s27:"Прошёл",s20:"Повтор",s0:"Не прошёл"},test:{q:"Вопрос",ans:"отвечено",prev:"← Назад",next:"Далее →",sub:"Завершить тест",unans:"без ответа",jump:"Быстрый переход:",clear:"Изменить ответ",att:"попытка"},res:{cong:"Поздравляем!",again:"Ещё раз!",sorry:"К сожалению...",passM:"🎉 Вы полностью подходите для вступления в команду Alcana Group!",retryM:"Вы перешли порог! Повторно изучите материалы и попробуйте снова.",failM:"На этот раз не удалось достичь результата. Обращайтесь позднее.",retry:"🔄 Повторить",home:"🏠 Главная",cloud:"☁️ Сохранено в облаке",local:"💾 Сохранено на устройстве",cats:["Компания","Ценности","HR Политика","Поведение","Инновации"]},adm:{title:"Панель администратора",pLbl:"Введите пароль...",login:"Войти →",wrong:"❌ Неверный пароль!",tot:"Всего",pass:"Прошли",ret:"Повтор",fail:"Не прошли",all:"Все",search:"Поиск по имени...",none:"Результатов не найдено",hdrs:["#","Имя Фамилия","Балл","%","Попытка","Статус","Дата"],exp:"📊 CSV",clr:"🗑️ Очистить",pL:"✅ Прошёл",rL:"⚠️ Повтор",fL:"❌ Не прошёл",sub:"Только авторизованные менеджеры",sb:"☁️ Supabase",lc:"💾 Локально"},mot:["Отлично! 🌊","Здорово! ✨","Продолжайте! 💪","Превосходно! 🎯","Сильно! 🔥","Вперёд! 🚀"]},
   en:{lang:"🇬🇧 English",h:{admin:"Admin",mus:"🌊 Music",musOff:"🔇 Music",exit:"Exit"},home:{badge:"New Employee Test",hero:"Alcana Group",sub:"Onboarding Assessment Platform",dur:"30 questions · ~15 minutes",info:"Enter your information",fnL:"First Name",fnP:"Your first name...",lnL:"Last Name",lnP:"Your last name...",start:"Start Test →",err:"Please enter your first and last name!",hint:"Click the button above for ocean sounds 🌊",s27:"Passed",s20:"Retry",s0:"Failed"},test:{q:"Question",ans:"answered",prev:"← Previous",next:"Next →",sub:"Submit Test",unans:"unanswered",jump:"Quick jump:",clear:"Change answer",att:"attempt"},res:{cong:"Congratulations!",again:"Try Again!",sorry:"Unfortunately...",passM:"🎉 You are fully eligible to join the Alcana Group team! HR will contact you soon.",retryM:"You crossed the threshold! Review the materials and succeed on your second attempt.",failM:"This time you didn't reach the expected result. Gather your strength and reapply later.",retry:"🔄 Retry",home:"🏠 Home",cloud:"☁️ Saved to cloud",local:"💾 Saved to device",cats:["Company","Values","HR Policy","Conduct","Innovation"]},adm:{title:"Admin Control Panel",pLbl:"Enter password...",login:"Login →",wrong:"❌ Wrong password!",tot:"Total",pass:"Passed",ret:"Retry",fail:"Failed",all:"All",search:"Search by name...",none:"No results found",hdrs:["#","Full Name","Score","%","Attempt","Status","Date"],exp:"📊 CSV",clr:"🗑️ Clear",pL:"✅ Passed",rL:"⚠️ Retry",fL:"❌ Failed",sub:"Authorized managers only",sb:"☁️ Supabase",lc:"💾 Local"},mot:["Amazing! 🌊","Great! ✨","Keep going! 💪","Excellent! 🎯","Strong! 🔥","Forward! 🚀"]}
 };
+// 4th language: Uzbek in Cyrillic letters, auto-derived from Latin Uzbek
+T["uz-cyrl"]=deepCyrl(T.uz);
+T["uz-cyrl"].lang="🇺🇿 Ўзбек";
 
 // ─── QUESTIONS ─────────────────────────────────────────────
 const QS={
@@ -394,13 +425,14 @@ export default function App(){
   const[langOpen,setLangOpen]=useState(false);
   const[catS,setCatS]=useState({});
   // Picked test section. Can be a hardcoded id ("alcana" | "amocrm") or a DbSection from admin.
-  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|DbSection|null>(null);
+  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|DbSection|null>(null);
   const[dbSections,setDbSections]=useState<DbSection[]>([]);
   const[adminTab,setAdminTab]=useState<"results"|"questions">("results");
   const[editingSection,setEditingSection]=useState<DbSection|"new"|null>(null);
   const[managingSectionId,setManagingSectionId]=useState<string|null>(null);
   const[editingQuestion,setEditingQuestion]=useState<DbQuestion|"new"|null>(null);
   const[adminRefresh,setAdminRefresh]=useState(0);
+  const[mistakesRow,setMistakesRow]=useState<any|null>(null);
   const actx=useRef(null);const stopO=useRef(null);
 
   useEffect(()=>{if(typeof window!=="undefined")localStorage.setItem("al_lang",lang);},[lang]);
@@ -428,6 +460,7 @@ export default function App(){
     const curQs:any[] = curDb
       ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index}))
       : selectedSection==="alcana" ? QS_ALCANA
+      : selectedSection==="umumiy" ? QS_ALCANA
       : selectedSection==="amocrm" ? QS_AMOCRM
       : QS[lang];
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
@@ -435,12 +468,19 @@ export default function App(){
     setScore(s);setCatS(cs);
     const pT = curDb ? curDb.pass_threshold
              : selectedSection==="alcana" ? 43
+             : selectedSection==="umumiy" ? 43
              : selectedSection==="amocrm" ? 26
              : 27;
     const rT = curDb ? curDb.retry_threshold
              : selectedSection==="alcana" ? 35
+             : selectedSection==="umumiy" ? 35
              : selectedSection==="amocrm" ? 21
              : 20;
+    const sectionKey:string = curDb ? `db:${curDb.id}`
+             : selectedSection==="alcana" ? "alcana"
+             : selectedSection==="umumiy" ? "umumiy"
+             : selectedSection==="amocrm" ? "amocrm"
+             : "legacy";
     const status = s>=pT ? "passed" : (s>=rT && attempt===1 ? "retry" : "failed");
     // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
     // Everything else goes into meta.
@@ -454,10 +494,19 @@ export default function App(){
         lang,
         cats: cs,
         section_id: curDb?.id || null,
-        section_label: curDb ? curDb.title_uz : (selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi"),
+        section_key: sectionKey,
+        section_label: curDb ? curDb.title_uz
+                              : selectedSection==="amocrm" ? "amoCRM bo'limi"
+                              : selectedSection==="umumiy" ? "Umumiy test"
+                              : "Alcana Jamoasi",
         total: curQs.length,
         pass_threshold: pT,
         retry_threshold: rT,
+        // Per-question record for the admin mistakes view:
+        // map of {questionIndex: pickedOptionIndex}; -1 means unanswered.
+        answers: Object.fromEntries(curQs.map((_,i)=>[i, answers[i]??-1])),
+        // Snapshot of correct answer indices in case section content is later edited.
+        correct: curQs.map((qq:any)=>qq.ans),
       },
     };
     if(status!=="retry"){addLocal({...rec,date:new Date().toLocaleString()});const ok=await sbOp("POST",rec);setSbSt(ok?"cloud":"local");}
@@ -475,30 +524,45 @@ export default function App(){
   };
 
   const t=T[lang];
+  // Translation helper: picks ru/en/uz-cyrl variant; falls back to uz; uz-cyrl auto-derives.
+  const L=(uz:string,ru?:string,en?:string)=>
+    lang==="ru"&&ru?ru
+    :lang==="en"&&en?en
+    :lang==="uz-cyrl"?toCyrl(uz)
+    :uz;
   // Derive the active question list + thresholds from selectedSection.
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
-  const qs:any = dbSec
+  const rawQs:any[] = dbSec
     ? (dbSec.questions||[]).map(dq=>({
-        q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:dq.text_uz,
-        opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:o.text_uz),
+        q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:lang==="uz-cyrl"?toCyrl(dq.text_uz):dq.text_uz,
+        opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:lang==="uz-cyrl"?toCyrl(o.text_uz):o.text_uz),
         ans: dq.correct_index,
       }))
     : selectedSection==="alcana" ? QS_ALCANA
+    : selectedSection==="umumiy" ? QS_ALCANA
     : selectedSection==="amocrm" ? QS_AMOCRM
     : QS[lang]; // legacy fallback (only used if nothing picked yet)
+  // For hardcoded arrays (Uzbek-only), apply Cyrillic transliteration when needed.
+  const qs:any = (lang==="uz-cyrl" && !dbSec)
+    ? rawQs.map((it:any)=>({q:toCyrl(it.q),opts:it.opts.map(toCyrl),ans:it.ans}))
+    : rawQs;
   const q=qs[cur];
   const totalQ = qs.length || 1;
   const passT = dbSec ? dbSec.pass_threshold
               : selectedSection==="alcana" ? 43
+              : selectedSection==="umumiy" ? 43
               : selectedSection==="amocrm" ? 26
               : 27;
   const retryT = dbSec ? dbSec.retry_threshold
                : selectedSection==="alcana" ? 35
+               : selectedSection==="umumiy" ? 35
                : selectedSection==="amocrm" ? 21
                : 20;
   const sectionTitle = dbSec
-    ? (lang==="ru"?dbSec.title_ru:lang==="en"?dbSec.title_en:dbSec.title_uz)
-    : selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi";
+    ? (lang==="ru"?dbSec.title_ru:lang==="en"?dbSec.title_en:lang==="uz-cyrl"?toCyrl(dbSec.title_uz):dbSec.title_uz)
+    : selectedSection==="amocrm" ? L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")
+    : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
+    : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
   const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase())));
   const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
@@ -576,10 +640,10 @@ export default function App(){
             <button onClick={()=>setSelectedSection("alcana")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>🏢</span>
-                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Alcana Jamoasi</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("Alcana Jamoasi","Команда Alcana","Alcana Team")}</span>
               </div>
-              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"Внутренние правила, культура компании и рабочий процесс":lang==="en"?"Internal rules, company culture and work process":"Ichki tartib qoidalari, kompaniya madaniyati va ish jarayoni"}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 43+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Ichki tartib qoidalari, kompaniya madaniyati va ish jarayoni","Внутренние правила, культура компании и рабочий процесс","Internal rules, company culture and work process")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {L("savol","вопросов","questions")} · 43+ {L("to'g'ri javob","для прохождения","to pass")}</div>
             </button>
           );})()}
           {/* Hardcoded section 2: amoCRM bo'limi */}
@@ -587,10 +651,21 @@ export default function App(){
             <button onClick={()=>setSelectedSection("amocrm")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>📋</span>
-                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>amoCRM bo'limi</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")}</span>
               </div>
-              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"amoCRM и взаимодействие с клиентами":lang==="en"?"amoCRM and customer interaction":"amoCRM va mijoz bilan muomala"}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 26+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("amoCRM va mijoz bilan muomala","amoCRM и взаимодействие с клиентами","amoCRM and customer interaction")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {L("savol","вопросов","questions")} · 26+ {L("to'g'ri javob","для прохождения","to pass")}</div>
+            </button>
+          );})()}
+          {/* Hardcoded section 3: Umumiy test (reuses 50 Alcana questions, editable via admin) */}
+          {(()=>{const isSel=selectedSection==="umumiy";return(
+            <button onClick={()=>setSelectedSection("umumiy")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>📚</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("Umumiy test","Общий тест","General test")}</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Umumiy bilim va kompaniya tartiblari bo'yicha test","Тест по общим знаниям и правилам компании","General knowledge and company rules test")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {L("savol","вопросов","questions")} · 43+ {L("to'g'ri javob","для прохождения","to pass")}</div>
             </button>
           );})()}
           {/* DB-added sections (managed via admin) */}
@@ -814,10 +889,11 @@ export default function App(){
             <thead>
               <tr style={{background:"linear-gradient(135deg,#0f2d1a,#16a34a)"}}>
                 {t.adm.hdrs.map(h=><th key={h}>{h}</th>)}
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {fRes.length===0&&<tr><td colSpan={7} style={{textAlign:"center",padding:"52px",color:"#d1d5db",fontSize:15}}>{t.adm.none}</td></tr>}
+              {fRes.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"52px",color:"#d1d5db",fontSize:15}}>{t.adm.none}</td></tr>}
               {fRes.map((r,i)=>{
                 const cl=r.status==="passed"?"#16a34a":r.status==="retry"?"#f59e0b":"#ef4444";
                 const lbl=r.status==="passed"?t.adm.pL:r.status==="retry"?t.adm.rL:t.adm.fL;
@@ -826,11 +902,18 @@ export default function App(){
                   <tr key={i}>
                     <td style={{color:"#d1d5db",fontWeight:700,fontSize:12}}>{i+1}</td>
                     <td style={{fontWeight:700,color:"#111827"}}>{r.name} {r.surname}</td>
-                    <td style={{fontWeight:900,color:cl,fontSize:16,letterSpacing:"-.01em"}}>{r.score}<span style={{fontSize:12,fontWeight:400,color:"#9ca3af"}}>/30</span></td>
-                    <td style={{fontWeight:700,color:cl}}>{Math.round((r.score/30)*100)}%</td>
+                    <td style={{fontWeight:900,color:cl,fontSize:16,letterSpacing:"-.01em"}}>{r.score}<span style={{fontSize:12,fontWeight:400,color:"#9ca3af"}}>/{r.meta?.total||30}</span></td>
+                    <td style={{fontWeight:700,color:cl}}>{Math.round((r.score/(r.meta?.total||30))*100)}%</td>
                     <td style={{textAlign:"center",color:"#9ca3af",fontWeight:500}}>{r.attempt}</td>
                     <td><span className={cls}>{lbl}</span></td>
                     <td style={{color:"#9ca3af",fontSize:12.5}}>{r.created_at?new Date(r.created_at).toLocaleDateString():r.date||""}</td>
+                    <td style={{textAlign:"center"}}>
+                      {r.meta?.answers ? (
+                        <button onClick={()=>setMistakesRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12}}>👁 {L("Tafsilot","Детали","Details")}</button>
+                      ) : (
+                        <span style={{color:"#d1d5db",fontSize:11}}>—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -879,6 +962,83 @@ export default function App(){
             onSaved={() => { setEditingQuestion(null); setAdminRefresh(v=>v+1); }}
           />
         )}
+        {mistakesRow && (()=>{
+          const m = mistakesRow.meta || {};
+          const ans = m.answers || {};
+          const correct = m.correct || [];
+          // Resolve the question source from section_key.
+          const skey:string = m.section_key || "";
+          let questionsSrc:any[] = [];
+          let sourceLabel = "";
+          if(skey==="alcana"||skey==="umumiy"){questionsSrc=QS_ALCANA;sourceLabel=m.section_label||"Alcana";}
+          else if(skey==="amocrm"){questionsSrc=QS_AMOCRM;sourceLabel=m.section_label||"amoCRM";}
+          else if(skey.startsWith("db:")){
+            const id=skey.slice(3);
+            const sec=dbSections.find(s=>s.id===id);
+            if(sec){
+              questionsSrc=(sec.questions||[]).map(dq=>({q:dq.text_uz,opts:(dq.options||[]).map(o=>o.text_uz),ans:dq.correct_index}));
+              sourceLabel=sec.title_uz;
+            }
+          }
+          const totalCount = m.total || questionsSrc.length || 0;
+          const wrongList:number[] = [];
+          for(let i=0;i<totalCount;i++){
+            const picked = ans[i];
+            const cor = correct[i] ?? questionsSrc[i]?.ans;
+            if(picked!==cor)wrongList.push(i);
+          }
+          return(
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setMistakesRow(null)}>
+              <div className="card" style={{maxWidth:780,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:24}} onClick={e=>e.stopPropagation()}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,gap:12,flexWrap:"wrap"}}>
+                  <h3 style={{fontSize:18,fontWeight:800,color:"#111827"}}>
+                    {mistakesRow.name} {mistakesRow.surname} — {sourceLabel}
+                  </h3>
+                  <button className="btn btn-s" onClick={()=>setMistakesRow(null)} style={{padding:"6px 12px",fontSize:12.5}}>✕</button>
+                </div>
+                <div style={{fontSize:13,color:"#6b7280",marginBottom:16}}>
+                  {mistakesRow.score} / {totalCount} · {wrongList.length} {L("ta noto'g'ri","ошибок","wrong")}
+                </div>
+                {questionsSrc.length===0 ? (
+                  <div style={{padding:16,background:"#fef3c7",borderRadius:8,color:"#92400e",fontSize:13}}>
+                    {L("Bu test bo'limi topilmadi (arxivlangan yoki o'chirilgan bo'lishi mumkin).","Раздел теста не найден (возможно, архивирован или удалён).","Test section not found (may be archived or deleted).")}
+                  </div>
+                ) : (
+                  questionsSrc.map((qq:any,i:number)=>{
+                    const picked = ans[i];
+                    const cor = correct[i] ?? qq.ans;
+                    const isWrong = picked !== cor;
+                    const wasUnanswered = picked === -1 || picked === undefined;
+                    const showQ = lang==="uz-cyrl"?toCyrl(qq.q):qq.q;
+                    return(
+                      <div key={i} style={{padding:14,marginBottom:10,borderRadius:10,border:`1.5px solid ${isWrong?"#fecaca":"#bbf7d0"}`,background:isWrong?"#fef2f2":"#f0fdf4"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:8}}>
+                          <div style={{fontSize:13,fontWeight:700,color:"#374151"}}>#{i+1}</div>
+                          <div style={{fontSize:12,fontWeight:700,color:isWrong?"#991b1b":"#166534"}}>
+                            {isWrong ? (wasUnanswered ? L("Javobsiz","Без ответа","Unanswered") : L("Noto'g'ri","Неверно","Wrong")) : L("To'g'ri","Верно","Correct")}
+                          </div>
+                        </div>
+                        <div style={{fontSize:14,color:"#111827",marginBottom:8,lineHeight:1.5}}>{showQ}</div>
+                        {(qq.opts||[]).map((opt:string,oi:number)=>{
+                          const isCor = oi===cor;
+                          const isPicked = oi===picked;
+                          const showOpt = lang==="uz-cyrl"?toCyrl(opt):opt;
+                          return(
+                            <div key={oi} style={{fontSize:13,padding:"6px 10px",marginBottom:4,borderRadius:6,background:isCor?"#dcfce7":isPicked?"#fee2e2":"#fff",border:`1px solid ${isCor?"#86efac":isPicked?"#fecaca":"#e5e7eb"}`,color:isCor?"#166534":isPicked?"#991b1b":"#4b5563",fontWeight:isCor||isPicked?600:400}}>
+                              {String.fromCharCode(65+oi)}) {showOpt}
+                              {isCor && <span style={{marginLeft:6,fontWeight:700}}>✓</span>}
+                              {isPicked && !isCor && <span style={{marginLeft:6,fontWeight:700}}>← {L("tanlandi","выбрано","picked")}</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
