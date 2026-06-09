@@ -218,6 +218,97 @@ const QS={
   ]
 };
 
+// ─── HARDCODED SECTION QUESTIONS ──────────────────────────
+// 50 questions for the "Alcana Jamoasi" card (34 Ichki Tartib + 16 Trello).
+const QS_ALCANA: {q:string;opts:string[];ans:number}[] = [
+  // Ichki Tartib Qoidalari (34 ta savol)
+  {q:`Xodim qoidabuzarlik qilganini o'zi tan olib, nazoratchidan oldin jarimalar daftariga yozsa, nima bo'ladi?`,opts:[`Jarima bekor qilinadi`,`Ogohlantirish beriladi`,`Jarimaning 50% ini to'laydi`,`To'liq jarima to'laydi`],ans:2},
+  {q:`Xodim yillik anketada ishdan ketish muddatini aniq ko'rsatmasa, qanday tartib qo'llaniladi?`,opts:[`Faqat 1 oy ishlab beradi`,`Darhol ishdan bo'shatiladi`,`Keyingi yil anketasi va 2 oylik qoida bo'yicha ishlaydi`,`Hech qanday talab qo'yilmaydi`],ans:2},
+  {q:`Xodim ishga kech qolishini oldindan bilsa, nima qilishi shart?`,opts:[`Ishga kelgach tushuntirish berishi kerak`,`Soat 08:30 gacha Telegram guruhida tasdiqlatishi kerak`,`Hamkasbiga aytib qo'yishi kifoya`,`Hech kimni ogohlantirmasa ham bo'ladi`],ans:1},
+  {q:`Ish vaqtidan tashqari o'rnatish (ustanovka) uchun korxona asboblari yoki mahsulotlarini ruxsatsiz bergan xodimga nima qo'llaniladi?`,opts:[`Ogohlantirish beriladi`,`Hech qanday chora ko'rilmaydi`,`Ogohlantirishsiz jarima qo'llaniladi`,`Faqat tushuntirish xati yozadi`],ans:2},
+  {q:`Ish vaqtida qanday kiyimda yurish shart?`,opts:[`Oddiy kiyim`,`Logotipli va ozoda kiyim`,`Sport kiyimi`,`Istalgan kiyim`],ans:1},
+  {q:`Oylikning 50% qachon beriladi?`,opts:[`Har oyning 15-sanasi`,`1-sanada`,`25-sanada`,`Oy oxirida`],ans:0},
+  {q:`Eng yaxshi amaliy taklif bergan xodim nima oladi?`,opts:[`Ta'til`,`Jarima`,`Bonus`,`Ogohlantirish`],ans:2},
+  {q:`Buyurtma 1C ga necha soatda kiritilishi kerak?`,opts:[`24 soat`,`12 soat`,`2 soat`,`6 soat`],ans:2},
+  {q:`O'lchovdagi xatolik sabab ish qayta bajarilsa, zarar kimdan ushlab qolinadi?`,opts:[`Barcha xodimlardan teng ushlab qolinadi`,`Faqat mijoz to'laydi`,`Shu ish uchun mas'ul xodimning bonus yoki KPIidan ushlab qolinadi`,`Hech kim javobgar bo'lmaydi`],ans:2},
+  {q:`Xodim mijoz bilan aloqa qilishda qaysi raqamdan foydalanishi kerak?`,opts:[`Shaxsiy telefon raqamidan`,`Istalgan telefon raqamidan`,`Faqat korxonaning telefon raqami va Telegramidan`,`Hamkasbining telefonidan`],ans:2},
+  {q:`Stanokdan foydalanishdan oldin nima qilinadi?`,opts:[`Stanokni ish davomida tekshirishi kerak`,`Nosozlik bo'lsa keyin rahbarga aytishi kerak`,`Ish boshlashdan oldin stanokning sozligini tekshirishi kerak`,`Faqat eski stanoklarni tekshirishi kerak`],ans:2},
+  {q:`Treningdan qaytgan xodim 3 kun ichida nima qilishi shart?`,opts:[`Faqat rahbarga hisobot topshirishi kerak`,`O'z bilimlarini boshqa xodimlarga o'rgatishi kerak`,`Trening materiallarini yashirib qo'yishi kerak`,`Yana bir treningga yozilishi kerak`],ans:1},
+  {q:`Mijoz fleshkasi ulanishidan oldin nima tekshiriladi?`,opts:[`Hajmi`,`Rangi`,`Virusi`,`Narxi`],ans:2},
+  {q:`Vazifa muddatiga ulgurmasa rahbar qachon ogohlantiriladi?`,opts:[`12 soat oldin`,`1 soat oldin`,`Keyin`,`Ogohlantirilmaydi`],ans:0},
+  {q:`Reklama budjeti rejasi kimga tasdiqlatiladi?`,opts:[`Omborchiga`,`Direktorga`,`Mijozga`,`Haydovchiga`],ans:1},
+  {q:`Xodim majlisga uzrli sabab bilan kech qolsa, nima qilishi kerak?`,opts:[`Majlis tugagach tushuntirish berishi kerak`,`Nazoratchini 1 soat oldin ogohlantirishi kerak`,`Hamkasbiga aytib qo'yishi kifoya`,`Hech kimni ogohlantirmasa ham bo'ladi`],ans:1},
+  {q:`Xom ashyo kimning ruxsati bilan olinadi?`,opts:[`Istalgan odamdan`,`Mas'ul xodimdan`,`Mijozdan`,`Ruxsatsiz olish mumkin`],ans:1},
+  {q:`Korxona mashinasi kaliti qayerda qoldirilmaydi?`,opts:[`Seyfda`,`Rahbarda`,`Ichida`,`Omborda`],ans:2},
+  {q:`Ishdan ketayotgan xodim zarar yetkazgan bo'lsa nima qiladi?`,opts:[`Yarmini to'laydi`,`To'lamaydi`,`To'liq qoplaydi`,`Kechiriladi`],ans:2},
+  {q:`Qoidalar daftarlari nazoratini kim yuritadi?`,opts:[`Nazoratchi`,`Sotuvchi`,`Mijoz`,`Dizayner`],ans:0},
+  {q:`Ichki sirlar qachongacha saqlanadi?`,opts:[`Faqat ish payti`,`Ishdan bo'shagandan keyin ham`,`Bir oy`,`Bir hafta`],ans:1},
+  {q:`Korxonada "vaqtga xiyonat qilish" deb qaysi holatga aytiladi?`,opts:[`Ishni reja asosida bajarish`,`Hamkasblarga yordam berish`,`Ish vaqtida yashirincha shaxsiy buyurtmalar bilan shug'ullanish`,`Vazifalarni muddatidan oldin tugatish`],ans:2},
+  {q:`Har bir mijoz qanday chiqib ketishi kerak?`,opts:[`Shoshilib`,`Norozi`,`Rozi`,`Jim`],ans:2},
+  {q:`Rahbar xonasiga qanday kiriladi?`,opts:[`Ruxsatsiz`,`Ruxsat bilan`,`Istalgan payt`,`Guruh bo'lib`],ans:1},
+  {q:`Sex hududida xodim qachon telefondan foydalanishi mumkin?`,opts:[`Istalgan vaqtda`,`Tanaffusdan tashqari paytlarda ham erkin foydalanishi mumkin`,`Faqat ishga bog'liq zarur holatda va mas'ul shaxs ruxsati bilan`,`Faqat shaxsiy qo'ng'iroqlar uchun`],ans:2},
+  {q:`Kunlik chiqim amalga oshirilgandan keyin ma'lumot qachongacha guruhga kiritilishi kerak?`,opts:[`Ish kuni oxirigacha`,`24 soat ichida`,`2 soat ichida`,`Hafta oxirigacha`],ans:2},
+  {q:`23:00 dan keyin sexda nima taqiqlanadi?`,opts:[`Kunlik reja tuzish`,`Telefon va ijtimoiy tarmoqlar`,`Dam olish`,`Ovqat yeyish`],ans:1},
+  {q:`Mijozdan bo'lim faoliyati bo'yicha asosli shikoyat tushsa, qanday chora qo'llaniladi?`,opts:[`Faqat rahbar javobgar bo'ladi`,`Hech qanday chora ko'rilmaydi`,`Bo'limning barcha xodimlariga jamoaviy moliyaviy jarima qo'llaniladi`,`Faqat bir xodimga ogohlantirish beriladi`],ans:2},
+  {q:`Xodim foydalangan ish qurolini boshqa joyda qoldirib ketsa, bu qanday holat hisoblanadi?`,opts:[`Ish jarayonining odatiy qismi`,`Faqat og'zaki ogohlantirishga sabab bo'ladi`,`Intizom buzilishi hisoblanib, jarima va choralar qo'llaniladi`,`Faqat rahbar ruxsati bilan mumkin`],ans:2},
+  {q:`Telegram'da xodimlar uchun qanday talab majburiy hisoblanadi?`,opts:[`Guruhlardan chiqib ketish`,`Faqat rahbarni kuzatish`,`Oxirgi kirgan vaqt holatini ochiq qilish`,`Faqat ish vaqtida yozish`],ans:2},
+  {q:`Dizayner mijoz bilan aloqa bo'yicha qanday majburiyatga ega?`,opts:[`Mijozni faqat sotuv bo'limiga yo'naltirishi`,`Mijoz savollariga javob bermasligi mumkin`,`O'z loyihasi bo'yicha mijoz bilan bevosita muloqot qilishi shart`,`Faqat yozma xabar orqali javob berishi kerak`],ans:2},
+  {q:`Montajchining mahsulotdagi kamchilik sabab qayta o'rnatish talab qilinsa, xarajatlar kim zimmasiga yuklanadi?`,opts:[`Korxona hisobidan qoplanadi`,`Mijoz to'laydi`,`Montajchi xodimlar zimmasiga yuklanadi`,`Sifat bo'limi to'laydi`],ans:2},
+  {q:`"Kuch birlikda" shiori bo'yicha xodim nima qilishi kerak?`,opts:[`Chetda turishi`,`Jamoaviy ishlarda faol qatnashishi`,`Faqat kuzatishi`,`Rad etishi`],ans:1},
+  {q:`Korxona xodimlarga nimalarni ta'minlab berishi shart?`,opts:[`Faqat ish haqi`,`Ish joyi, asbob-uskunalar, texnik jihozlar va maxsus kiyim`,`Faqat maxsus kiyim`,`Faqat texnik jihozlar`],ans:1},
+  // Trello bo'yicha test savollari (16 ta savol)
+  {q:`Trelloda ish boshlashdan oldin nima qilinishi shart?`,opts:[`Hisobot yozish`,`Vazifani bajarildi qilish`,`Mirzohid aka audiosini eshittirish`,`Yangi kartochka ochish`],ans:2},
+  {q:`Vazifa necha soat ichida "Vazifalar"dan "Jarayon"ga o'tkazilishi kerak?`,opts:[`1 soat`,`3 soat`,`5 soat`,`8 soat`],ans:1},
+  {q:`Vazifa bajarilgach birinchi navbatda qayerda hisobot beriladi?`,opts:[`Trello izohida`,`Shaxsiy chatda`,`Telefon orqali`,`Telegram guruhida`],ans:3},
+  {q:`Telegramda hisobot berilgandan keyin Trelloda nima yoziladi?`,opts:[`Vazifa nomi`,`Rahbar ismi`,`Hisobot berilgan vaqt`,`Jarima summasi`],ans:2},
+  {q:`Vazifa tugagach qaysi holatga o'tkaziladi?`,opts:[`Jarayon`,`Nazorat`,`Tekshiruv`,`Bajarildi`],ans:3},
+  {q:`Hisobot "Dedlayn"ni qaysi paytida topshirilishi kerak?`,opts:[`Vazifa boshida darhol`,`Dedlayn kunida va berilgan vaqtigacha`,`Istalgan vaqtda`,`Ertasi kuni kunduzgi vaqtda`],ans:1},
+  {q:`"Bajarildi"ga o'tkazish kechiksa har bir qo'shimcha soat uchun nima qo'llaniladi?`,opts:[`Mukofot`,`Dam olish`,`Ogohlantirish`,`Jarima`],ans:3},
+  {q:`Jarima yozilgandan keyin yangi muddatni qancha vaqt ichida belgilatib olinishi kerak?`,opts:[`30 daqiqa`,`2 soat`,`1 soat`,`24 soat`],ans:2},
+  {q:`Trellodagi vazifani o'chirib tashlash mumkinmi?`,opts:[`Rahbarsiz ham mumkin`,`Faqat kechqurun mumkin`,`Ba'zan mumkin`,`Qat'iyan mumkin emas`],ans:3},
+  {q:`Xodim boshqa xodimga berilgan vazifani o'zgartira oladimi?`,opts:[`Yo'q, mumkin emas`,`Ha, istalgan payt`,`Faqat yakshanba kuni`,`Faqat telefon orqali`],ans:0},
+  {q:`Vazifani tushunmasdan "Jarayon"ga olish mumkinmi?`,opts:[`Mumkin`,`Faqat rahbar ruxsati bilan`,`Mumkin emas`,`Ba'zan mumkin`],ans:2},
+  {q:`Vazifani vaqtida tugata olmasa rahbar qachon ogohlantiriladi?`,opts:[`Dedlayndan 1 soat oldin`,`Dedlayndan keyin`,`Ertasi kuni`,`Istalgan vaqtda`],ans:0},
+  {q:`Vazifa "Jarayon"da turgan bo'lsa va xodim uni o'z vaqtida bajara olmasligini bilsa, nima qilishi kerak?`,opts:[`Vazifani muddatidan keyin bajarib, keyin rahbarga xabar berishi kerak.`,`Vazifani "Bajarildi"ga o'tkazib, keyin rahbar bilan bog'lanishi kerak.`,`Muddatdan kamida 1 soat oldin rahbarni SMS yoki Telegram orqali ogohlantirib, 5 daqiqa ichida telefon qilishi kerak.`,`Faqat Telegram orqali yozishi kifoya, telefon qilish shart emas.`],ans:2},
+  {q:`Trelloda yangi kartochka ochish kimga ruxsat etiladi?`,opts:[`Har qanday xodimga`,`Faqat staji 1 yildan oshgan xodimga`,`Telegramda yozgan xodimga`,`Hech kimga ruxsat etilmaydi`],ans:3},
+  {q:`Xodim o'ziga berilgan vazifaga Trelloda nima qila oladi?`,opts:[`Yangi muddat belgilashi mumkin`,`Faqat vazifani bosqichlar bo'yicha o'tkazishi va izoh qoldirishi mumkin`,`Boshqa xodimga topshirishi mumkin`,`Vazifa mazmunini o'zgartirishi mumkin`],ans:1},
+  {q:`Mas'ul shaxs Trelloda berilgan yangi vazifani olgach, birinchi navbatda nima qilishi kerak?`,opts:[`Vazifani darhol "Jarayon"ga o'tkazishi kerak.`,`Vazifani o'qib chiqmasdan bajarishni boshlashi kerak.`,`Vazifani diqqat bilan o'qib, mazmuni va talablarini to'liq tushunib olgandan keyingina "Jarayon"ga o'tkazishi kerak.`,`Vazifani boshqa xodimga yuborib qo'yishi kerak.`],ans:2},
+];
+
+// 30 questions for the "amoCRM bo'limi" card.
+const QS_AMOCRM: {q:string;opts:string[];ans:number}[] = [
+  {q:`amoCRM da yangi mijoz murojaati kelganda xodimning birinchi vazifasi nima?`,opts:[`Mijozni kutishga qo'yish`,`Mijoz ma'lumotlarini amoCRM ga kiritish va bitim yaratish`,`Faqat telefon raqamini saqlab qo'yish`,`Rahbarning ko'rsatmasini kutish`],ans:1},
+  {q:`amoCRM ga yangi mijoz murojaati kelganda birinchi nima qilinadi?`,opts:[`E'tibor hisobga olinmaydi / E'tiborsiz qoldiriladi`,`O'chirib yuboriladi`,`Mijozga aloqaga chiqiladi`,`Kutib turiladi`],ans:2},
+  {q:`Mijoz bilan gaplashayotganda qanday ohangda muloqot qilish kerak?`,opts:[`Qo'pol`,`Hurmat bilan`,`Befarq`,`Jahldor`],ans:1},
+  {q:`Mijozning telefon raqami qayerda saqlanishi kerak?`,opts:[`amoCRM da`,`Telegramda`,`Daftarda`,`Esda`],ans:0},
+  {q:`Mijoz savoliga javob berishda nima muhim?`,opts:[`Tez va aniq javob berish`,`Kechiktirish`,`Mavzuni o'zgartirish`,`Javob bermaslik`],ans:0},
+  {q:`Mijoz murojaati CRM ga kiritilmasa nima yuz beradi?`,opts:[`Muammo bo'lmaydi`,`Mijoz yo'qolib qolishi mumkin`,`Savdo oshadi`,`Bonus beriladi`],ans:1},
+  {q:`Mijoz bilan tortishish kerakmi?`,opts:[`Ha`,`Ba'zida`,`Yo'q`,`Zarur bo'lsa`],ans:2},
+  {q:`CRM dagi ma'lumotlar qanday bo'lishi kerak?`,opts:[`Taxminiy`,`Keraksiz`,`Qisman`,`To'liq va aniq`],ans:3},
+  {q:`Mijoz qo'ng'iroqqa javob bermasa nima qilinadi?`,opts:[`Qayta bog'laniladi`,`Unutiladi`,`Bloklanadi`,`O'chiriladi`],ans:0},
+  {q:`Mijoz mahsulot yoki xizmat haqida qo'shimcha ma'lumot so'rasa, xodim qanday yo'l tutishi kerak?`,opts:[`Taxminiy ma'lumot berishi kerak.`,`Mavzuni o'zgartirib yuborishi kerak.`,`Faqat aniq va tasdiqlangan ma'lumot berishi kerak.`,`Javob berishni boshqa kunga qoldirishi kerak.`],ans:2},
+  {q:`amoCRM da vazifa nima uchun qo'yiladi?`,opts:[`Eslatma uchun`,`O'yin uchun`,`Hisobot uchun`,`Reklama uchun`],ans:0},
+  {q:`Mijoz bilan suhbatda eng muhim narsa nima?`,opts:[`Shoshirish`,`Ko'p gapirish`,`Eshitish va tushunish`,`Bahslashish`],ans:2},
+  {q:`Mijoz ma'lumotlarini boshqa shaxslarga berish mumkinmi?`,opts:[`Ha`,`Yo'q`,`Do'stlarga mumkin`,`Hamkasblarga har doim mumkin`],ans:1},
+  {q:`Mijozga va'da berilganda nima qilish kerak?`,opts:[`Unutish`,`Bekor qilish`,`Kechiktirish`,`Bajarish`],ans:3},
+  {q:`CRM da varonkadagi mijoz kartochkasi nima uchun o'zgartiriladi?`,opts:[`Jarayonni ko'rsatish uchun`,`Chiroyli ko'rinish uchun`,`Tasodifan`,`Keraksiz`],ans:0},
+  {q:`Mijoz e'tiroz bildirsa nima qilish kerak?`,opts:[`Bahslashish`,`Telefonni qo'yish`,`Tinglash va yechim taklif qilish`,`E'tibor bermaslik`],ans:2},
+  {q:`Savdo yopilgandan keyin nima qilish kerak?`,opts:[`CRM ni yangilash`,`Hech narsa`,`Mijozni o'chirish`,`Statusni o'zgartirmaslik`],ans:0},
+  {q:`Mijozga javob berishni kechiktirish nimaga olib keladi?`,opts:[`Savdo oshadi`,`Ishonch kamayadi`,`Foyda ko'payadi`,`Ta'siri yo'q`],ans:1},
+  {q:`CRM da izohlar nima uchun yoziladi?`,opts:[`Shunchaki o'yin uchun`,`Bekorchilik uchun`,`Reklama uchun`,`Mijoz tarixi saqlanishi uchun`],ans:3},
+  {q:`Mijozga murojaat qilishda nima muhim?`,opts:[`Hurmat va odob`,`Buyruq ohangi`,`Qo'pollik`,`Shoshirish`],ans:0},
+  {q:`Mijoz javob bermasa nima qilinadi?`,opts:[`Belgilangan vaqtda qayta aloqa qilinadi`,`O'chiriladi`,`Bloklanadi`,`Unutiladi`],ans:0},
+  {q:`CRM dagi vazifani yopishdan oldin nima tekshiriladi?`,opts:[`Rang`,`Sana`,`Vazifa bajarilgani`,`Ism`],ans:2},
+  {q:`Mijozga noto'g'ri narx aytilsa nima qilish kerak?`,opts:[`Xatoni tan olib to'g'rilash`,`Yashirish`,`Bahslashish`,`Javob bermaslik`],ans:0},
+  {q:`Mijoz bilan yozishmada qanday uslub bo'lishi kerak?`,opts:[`Beparvo`,`Qo'pol`,`Professional va muloyim`,`Hazilomuz`],ans:2},
+  {q:`CRM ga ma'lumot qachon kiritiladi?`,opts:[`Muloqotdan so'ng darhol`,`Bir haftadan keyin`,`Oyning oxirida`,`Kerak bo'lsa`],ans:0},
+  {q:`Mijozning e'tirozini eshitmaslik nimaga olib keladi?`,opts:[`Bonusga`,`Savdo oshishiga`,`Mijozni yo'qotishga`,`Reklamaga`],ans:2},
+  {q:`amoCRM da vazifani unutmaslik uchun nima qilinadi?`,opts:[`Vazifa va muddat qo'yiladi`,`Kutib turiladi`,`Yozilmaydi`,`O'chirib yuboriladi`],ans:0},
+  {q:`Mijozga yolg'on va'da berish mumkinmi?`,opts:[`Ba'zida`,`Ha, vaziyatga qarab`,`Yo'q`,`Zarur bo'lsa`],ans:2},
+  {q:`Mijoz bilan ishlashdagi asosiy maqsad nima?`,opts:[`Mijoz ehtiyojini qondirish va savdo qilish`,`Bahslashish`,`Shoshirish`,`Rad etish`],ans:0},
+  {q:`amoCRM da barcha ma'lumotlarni o'z vaqtida kiritish nima uchun muhim?`,opts:[`Ish jarayonini nazorat qilish uchun`,`Faqat hisobot uchun`,`Keraksiz`,`Faqat rahbar uchun`],ans:0},
+];
+
 // ─── OCEAN AUDIO ──────────────────────────────────────────
 function mkOcean(ctx){
   const master=ctx.createGain();master.gain.value=0.42;master.connect(ctx.destination);
@@ -336,12 +427,20 @@ export default function App(){
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
     const curQs:any[] = curDb
       ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index}))
+      : selectedSection==="alcana" ? QS_ALCANA
+      : selectedSection==="amocrm" ? QS_AMOCRM
       : QS[lang];
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
     curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     setScore(s);setCatS(cs);
-    const pT = curDb ? curDb.pass_threshold : 27;
-    const rT = curDb ? curDb.retry_threshold : 20;
+    const pT = curDb ? curDb.pass_threshold
+             : selectedSection==="alcana" ? 43
+             : selectedSection==="amocrm" ? 26
+             : 27;
+    const rT = curDb ? curDb.retry_threshold
+             : selectedSection==="alcana" ? 35
+             : selectedSection==="amocrm" ? 21
+             : 20;
     const status = s>=pT ? "passed" : (s>=rT && attempt===1 ? "retry" : "failed");
     // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
     // Everything else goes into meta.
@@ -376,8 +475,7 @@ export default function App(){
   };
 
   const t=T[lang];
-  // Derive the active question list, thresholds, and section label from selectedSection.
-  // Hardcoded "alcana" & "amocrm" reuse the 30-question QS array as a placeholder.
+  // Derive the active question list + thresholds from selectedSection.
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
   const qs:any = dbSec
     ? (dbSec.questions||[]).map(dq=>({
@@ -385,11 +483,19 @@ export default function App(){
         opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:o.text_uz),
         ans: dq.correct_index,
       }))
-    : QS[lang];
+    : selectedSection==="alcana" ? QS_ALCANA
+    : selectedSection==="amocrm" ? QS_AMOCRM
+    : QS[lang]; // legacy fallback (only used if nothing picked yet)
   const q=qs[cur];
   const totalQ = qs.length || 1;
-  const passT = dbSec ? dbSec.pass_threshold : 27;
-  const retryT = dbSec ? dbSec.retry_threshold : 20;
+  const passT = dbSec ? dbSec.pass_threshold
+              : selectedSection==="alcana" ? 43
+              : selectedSection==="amocrm" ? 26
+              : 27;
+  const retryT = dbSec ? dbSec.retry_threshold
+               : selectedSection==="alcana" ? 35
+               : selectedSection==="amocrm" ? 21
+               : 20;
   const sectionTitle = dbSec
     ? (lang==="ru"?dbSec.title_ru:lang==="en"?dbSec.title_en:dbSec.title_uz)
     : selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi";
@@ -473,7 +579,7 @@ export default function App(){
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Alcana Jamoasi</span>
               </div>
               <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"Внутренние правила, культура компании и рабочий процесс":lang==="en"?"Internal rules, company culture and work process":"Ichki tartib qoidalari, kompaniya madaniyati va ish jarayoni"}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 27+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 43+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
             </button>
           );})()}
           {/* Hardcoded section 2: amoCRM bo'limi */}
@@ -484,7 +590,7 @@ export default function App(){
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>amoCRM bo'limi</span>
               </div>
               <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"amoCRM и взаимодействие с клиентами":lang==="en"?"amoCRM and customer interaction":"amoCRM va mijoz bilan muomala"}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 27+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 26+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
             </button>
           );})()}
           {/* DB-added sections (managed via admin) */}
