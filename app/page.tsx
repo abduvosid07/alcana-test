@@ -246,7 +246,15 @@ function mkOcean(ctx){
 
 // ─── SUPABASE / STORAGE ───────────────────────────────────
 async function sbOp(method,body,params=""){
-  try{const r=await fetch(`${SB_URL}/rest/v1/test_results${params}`,{method,headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`,"Content-Type":"application/json",Prefer:method==="POST"?"return=representation":""},body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error();return method==="GET"?r.json():true;}catch{return null;}
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/assessment_results${params}`,{
+      method,
+      headers:{apikey:SB_KEY!,Authorization:`Bearer ${SB_KEY}`,"Content-Type":"application/json",Prefer:method==="POST"?"return=representation":""},
+      body:body?JSON.stringify(body):undefined,
+    });
+    if(!r.ok){const errText=await r.text().catch(()=>"");console.error("sbOp failed:",r.status,errText);throw new Error("sbOp failed");}
+    return method==="GET"?r.json():true;
+  }catch(e){console.error("sbOp error:",e);return null;}
 }
 const getLocal=()=>{try{return JSON.parse(localStorage.getItem(LK)||"[]");}catch{return[];}};
 const addLocal=r=>{const a=getLocal();a.unshift(r);localStorage.setItem(LK,JSON.stringify(a));};
@@ -335,14 +343,23 @@ export default function App(){
     const pT = curDb ? curDb.pass_threshold : 27;
     const rT = curDb ? curDb.retry_threshold : 20;
     const status = s>=pT ? "passed" : (s>=rT && attempt===1 ? "retry" : "failed");
+    // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
+    // Everything else goes into meta.
     const rec:any = {
-      name:cand.name, surname:cand.surname, score:s, status, attempt, lang, cat_scores:cs,
-      section_id: curDb?.id || null,
-      section_label: curDb ? curDb.title_uz : (selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi"),
-      total: curQs.length,
-      pass_threshold: pT,
-      retry_threshold: rT,
-      created_at: new Date().toISOString(),
+      name: cand.name,
+      surname: cand.surname,
+      score: s,
+      attempt,
+      status,
+      meta: {
+        lang,
+        cats: cs,
+        section_id: curDb?.id || null,
+        section_label: curDb ? curDb.title_uz : (selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi"),
+        total: curQs.length,
+        pass_threshold: pT,
+        retry_threshold: rT,
+      },
     };
     if(status!=="retry"){addLocal({...rec,date:new Date().toLocaleString()});const ok=await sbOp("POST",rec);setSbSt(ok?"cloud":"local");}
     nav(()=>setPage("result"));
@@ -415,7 +432,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="home") return(
     <div style={{minHeight:"100vh",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{__html:CSS}} />
       <Header/>
       {/* ── HERO ── */}
       <section className="hero">
@@ -502,7 +519,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="test") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{__html:CSS}} />
       {/* Toast */}
       <div style={{position:"fixed",top:80,left:"50%",pointerEvents:"none",zIndex:999,opacity:tv?1:0,transition:"opacity .25s",animation:tv?"toastIn .3s cubic-bezier(.4,0,.2,1) both":"none"}}>
         <div style={{background:"#16a34a",color:"#fff",borderRadius:24,padding:"10px 22px",fontWeight:700,fontSize:14,boxShadow:"0 4px 20px rgba(22,163,74,.45)",whiteSpace:"nowrap",transform:"translateX(-50%)"}}>{toast}</div>
@@ -575,7 +592,7 @@ export default function App(){
     const circ=2*Math.PI*62,dash=(s/totalQ)*circ;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-        <style>{CSS}</style>
+        <style dangerouslySetInnerHTML={{__html:CSS}} />
         <Header sub={t.res.title||"Result"}/>
         <div style={{maxWidth:540,margin:"0 auto",padding:"28px 16px 48px"}}>
           <div className="card card-p-lg si" style={{boxShadow:"0 20px 40px rgba(0,0,0,.1)",textAlign:"center"}}>
@@ -628,7 +645,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="login") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{__html:CSS}} />
       <Header sub={t.adm.sub}/>
       <div style={{maxWidth:380,margin:"60px auto",padding:"0 16px"}}>
         <div className="card card-p-lg si" style={{textAlign:"center",boxShadow:"0 20px 40px rgba(0,0,0,.1)"}}>
@@ -648,7 +665,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="admin") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{__html:CSS}} />
       <Header sub={t.adm.title}/>
       <div style={{maxWidth:1000,margin:"0 auto",padding:"24px 16px 48px"}}>
         {/* Cloud status */}
