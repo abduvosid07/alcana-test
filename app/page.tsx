@@ -1,6 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
-import { listSectionsWithQuestions, type DbSection } from "../lib/quizApi";
+import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
+import AdminQuestions from "../components/AdminQuestions";
+import SectionFormModal from "../components/SectionFormModal";
+import QuestionFormModal from "../components/QuestionFormModal";
+import QuestionsList from "../components/QuestionsList";
 
 // Force Next.js to render this strictly on demand to fix build loops
 export const dynamic = "force-dynamic";
@@ -310,6 +314,11 @@ export default function App(){
   const [catS,setCatS]=useState<any>({});
   const [dbSections,setDbSections]=useState<DbSection[]>([]);
   const [activeDbSection,setActiveDbSection]=useState<DbSection|null>(null);
+  const [adminTab,setAdminTab]=useState<"results"|"questions">("results");
+  const [editingSection,setEditingSection]=useState<DbSection|"new"|null>(null);
+  const [managingSectionId,setManagingSectionId]=useState<string|null>(null);
+  const [editingQuestion,setEditingQuestion]=useState<DbQuestion|"new"|null>(null);
+  const [adminRefresh,setAdminRefresh]=useState(0);
   const actx=useRef<any>(null);const stopO=useRef<any>(null);
 
   useEffect(() => {
@@ -322,7 +331,7 @@ export default function App(){
   useEffect(()=>{if (typeof window !== "undefined") localStorage.setItem("al_lang",lang);},[lang]);
   useEffect(()=>()=>{if(stopO.current)stopO.current();if(actx.current)actx.current.close();},[]);
   useEffect(()=>{const h=()=>setLangOpen(false);if(langOpen)document.addEventListener("click",h);return()=>document.removeEventListener("click",h);},[langOpen]);
-  useEffect(()=>{listSectionsWithQuestions().then(setDbSections).catch(e=>console.error("dbSections:",e));},[]);
+  useEffect(()=>{listSectionsWithQuestions().then(setDbSections).catch(e=>console.error("dbSections:",e));},[adminRefresh]);
 
   const toggleMusic=useCallback(()=>{
     if(music){if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);}
@@ -605,8 +614,28 @@ export default function App(){
         <div style={{maxWidth:1120,margin:"24px auto",padding:"0 16px 48px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,flexWrap:"wrap",gap:12}}>
             <div><h2 style={{fontSize:24,fontWeight:900,color:"#111827",letterSpacing:"-.02em"}}>{t.adm.title}</h2><p style={{fontSize:13.5,color:"#6b7280"}}>Connected to: <span style={{fontWeight:700,color:"#16a34a"}}>{t.adm.sb}</span></p></div>
-            <div style={{display:"flex",gap:8}}><button className="btn btn-s" onClick={exportCSV} disabled={results.length===0}>{t.adm.exp}</button><button className="btn btn-s" onClick={clearDatabase} disabled={results.length===0} style={{borderColor:"#fee2e2",color:"#991b1b"}}>{t.adm.clr}</button></div>
+            {adminTab==="results" && (
+              <div style={{display:"flex",gap:8}}><button className="btn btn-s" onClick={exportCSV} disabled={results.length===0}>{t.adm.exp}</button><button className="btn btn-s" onClick={clearDatabase} disabled={results.length===0} style={{borderColor:"#fee2e2",color:"#991b1b"}}>{t.adm.clr}</button></div>
+            )}
           </div>
+          <div style={{display:"flex",gap:6,marginBottom:20,borderBottom:"1.5px solid #e5e7eb"}}>
+            {[{k:"results",label:"Results"},{k:"questions",label:"Sections & Questions"}].map(({k,label})=>(
+              <button
+                key={k}
+                onClick={()=>setAdminTab(k as any)}
+                style={{
+                  background:"transparent",border:"none",cursor:"pointer",
+                  padding:"10px 18px",fontSize:14,fontWeight:700,fontFamily:"inherit",
+                  color: adminTab===k ? "#16a34a" : "#6b7280",
+                  borderBottom: adminTab===k ? "2.5px solid #16a34a" : "2.5px solid transparent",
+                  marginBottom:-2,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {adminTab==="results" && (<>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:20}}>
             {[[t.adm.tot,cTot,"#111827","#fff"],[t.adm.pass,cPas,"#16a34a","#f0fdf4"],[t.adm.ret,cRet,"#d97706","#fffb2e2"],[t.adm.fail,cFai,"#dc2626","#fee2e2"]].map(([lb,val,co,bg]: any)=>(
               <div key={lb} className="card card-p" style={{background:bg,borderColor:co+"22",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -652,6 +681,42 @@ export default function App(){
               </table>
             </div>
           </div>
+          </>)}
+          {adminTab==="questions" && (
+            managingSectionId ? (
+              <QuestionsList
+                sectionId={managingSectionId}
+                lang={lang as any}
+                onEditQuestion={q => setEditingQuestion(q)}
+                onAddQuestion={() => setEditingQuestion("new")}
+                onBack={() => setManagingSectionId(null)}
+                refreshKey={adminRefresh}
+              />
+            ) : (
+              <AdminQuestions
+                lang={lang as any}
+                onEditSection={s => setEditingSection(s ?? "new")}
+                onAddQuestion={sectionId => { setManagingSectionId(sectionId); setEditingQuestion("new"); }}
+                onManageQuestions={sectionId => setManagingSectionId(sectionId)}
+                refreshKey={adminRefresh}
+              />
+            )
+          )}
+          {editingSection !== null && (
+            <SectionFormModal
+              section={editingSection === "new" ? null : editingSection}
+              onClose={() => setEditingSection(null)}
+              onSaved={() => { setEditingSection(null); setAdminRefresh(v=>v+1); }}
+            />
+          )}
+          {editingQuestion !== null && managingSectionId && (
+            <QuestionFormModal
+              sectionId={managingSectionId}
+              question={editingQuestion === "new" ? null : editingQuestion}
+              onClose={() => setEditingQuestion(null)}
+              onSaved={() => { setEditingQuestion(null); setAdminRefresh(v=>v+1); }}
+            />
+          )}
         </div>
       </div>
     );
