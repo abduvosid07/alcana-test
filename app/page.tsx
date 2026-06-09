@@ -1,5 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
+import AdminQuestions from "../components/AdminQuestions";
+import SectionFormModal from "../components/SectionFormModal";
+import QuestionFormModal from "../components/QuestionFormModal";
+import QuestionsList from "../components/QuestionsList";
 
 // Force Next.js to render this strictly on demand to fix build loops
 export const dynamic = "force-dynamic";
@@ -289,9 +294,18 @@ export default function App(){
   const[sbSt,setSbSt]=useState("local");
   const[langOpen,setLangOpen]=useState(false);
   const[catS,setCatS]=useState({});
+  // Picked test section. Can be a hardcoded id ("alcana" | "amocrm") or a DbSection from admin.
+  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|DbSection|null>(null);
+  const[dbSections,setDbSections]=useState<DbSection[]>([]);
+  const[adminTab,setAdminTab]=useState<"results"|"questions">("results");
+  const[editingSection,setEditingSection]=useState<DbSection|"new"|null>(null);
+  const[managingSectionId,setManagingSectionId]=useState<string|null>(null);
+  const[editingQuestion,setEditingQuestion]=useState<DbQuestion|"new"|null>(null);
+  const[adminRefresh,setAdminRefresh]=useState(0);
   const actx=useRef(null);const stopO=useRef(null);
 
-  useEffect(()=>{localStorage.setItem("al_lang",lang);},[lang]);
+  useEffect(()=>{if(typeof window!=="undefined")localStorage.setItem("al_lang",lang);},[lang]);
+  useEffect(()=>{listSectionsWithQuestions().then(setDbSections).catch(e=>console.error("dbSections:",e));},[adminRefresh]);
   useEffect(()=>()=>{if(stopO.current)stopO.current();if(actx.current)actx.current.close();},[]);
   useEffect(()=>{const h=()=>setLangOpen(false);if(langOpen)document.addEventListener("click",h);return()=>document.removeEventListener("click",h);},[langOpen]);
 
@@ -309,17 +323,33 @@ export default function App(){
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
 
   const submitTest=async()=>{
-    const qs=QS[lang];let s=0;const ck=["company","values","hr","conduct","innovation"];const cs={};ck.forEach(k=>cs[k]=0);
-    qs.forEach((q,i)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
+    // Read from the currently active section (DB or hardcoded). qs is already derived above
+    // for the render, but we re-derive here because closures can drift mid-quiz.
+    const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
+    const curQs:any[] = curDb
+      ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index}))
+      : QS[lang];
+    let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
+    curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     setScore(s);setCatS(cs);
-    const status=s>=27?"passed":s>=20&&attempt===1?"retry":"failed";
-    const rec={name:cand.name,surname:cand.surname,score:s,status,attempt,lang,cat_scores:cs,created_at:new Date().toISOString()};
+    const pT = curDb ? curDb.pass_threshold : 27;
+    const rT = curDb ? curDb.retry_threshold : 20;
+    const status = s>=pT ? "passed" : (s>=rT && attempt===1 ? "retry" : "failed");
+    const rec:any = {
+      name:cand.name, surname:cand.surname, score:s, status, attempt, lang, cat_scores:cs,
+      section_id: curDb?.id || null,
+      section_label: curDb ? curDb.title_uz : (selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi"),
+      total: curQs.length,
+      pass_threshold: pT,
+      retry_threshold: rT,
+      created_at: new Date().toISOString(),
+    };
     if(status!=="retry"){addLocal({...rec,date:new Date().toLocaleString()});const ok=await sbOp("POST",rec);setSbSt(ok?"cloud":"local");}
     nav(()=>setPage("result"));
   };
 
   const retryTest=()=>{setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));};
-  const goHome=useCallback(()=>{if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);nav(()=>{setPage("home");setCand({name:"",surname:""});setAttempt(1);setAnswers({});setScore(null);},-1);},[]);
+  const goHome=useCallback(()=>{if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);nav(()=>{setPage("home");setCand({name:"",surname:""});setAttempt(1);setAnswers({});setScore(null);setSelectedSection(null);},-1);},[]);
 
   const loginAdmin=async()=>{
     if(ap!==ADMIN_PASS){setAe(t.adm.wrong);return;}setAe("");
@@ -328,7 +358,24 @@ export default function App(){
     nav(()=>setPage("admin"));setAp("");
   };
 
-  const t=T[lang];const qs=QS[lang];const q=qs[cur];
+  const t=T[lang];
+  // Derive the active question list, thresholds, and section label from selectedSection.
+  // Hardcoded "alcana" & "amocrm" reuse the 30-question QS array as a placeholder.
+  const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
+  const qs:any = dbSec
+    ? (dbSec.questions||[]).map(dq=>({
+        q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:dq.text_uz,
+        opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:o.text_uz),
+        ans: dq.correct_index,
+      }))
+    : QS[lang];
+  const q=qs[cur];
+  const totalQ = qs.length || 1;
+  const passT = dbSec ? dbSec.pass_threshold : 27;
+  const retryT = dbSec ? dbSec.retry_threshold : 20;
+  const sectionTitle = dbSec
+    ? (lang==="ru"?dbSec.title_ru:lang==="en"?dbSec.title_en:dbSec.title_uz)
+    : selectedSection==="amocrm" ? "amoCRM bo'limi" : "Alcana Jamoasi";
   const answered=Object.keys(answers).length;
   const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase())));
   const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
@@ -389,16 +436,7 @@ export default function App(){
           </div>
           <h1 style={{color:"#fff",fontSize:40,fontWeight:900,letterSpacing:"-.03em",marginBottom:10,lineHeight:1.15}}>{t.home.hero}</h1>
           <p style={{color:"rgba(255,255,255,.72)",fontSize:16,fontWeight:400,marginBottom:6}}>{t.home.sub}</p>
-          <p style={{color:"rgba(255,255,255,.45)",fontSize:13.5}}>{t.home.dur}</p>
-          {/* Glass score cards */}
-          <div style={{display:"flex",gap:12,marginTop:36,justifyContent:"center",flexWrap:"wrap"}}>
-            {[[`✅ 27–30`,t.home.s27,"rgba(74,222,128,.25)","rgba(74,222,128,.5)"],[`⚠️ 20–26`,t.home.s20,"rgba(251,191,36,.2)","rgba(251,191,36,.5)"],[`❌ 0–19`,t.home.s0,"rgba(248,113,113,.2)","rgba(248,113,113,.5)"]].map(([sc,lb,bg,bc])=>(
-              <div key={lb} className="glass-card" style={{background:bg,border:`1px solid ${bc}`,minWidth:130,flex:1}}>
-                <div style={{fontSize:17,fontWeight:800,color:"#fff",marginBottom:2}}>{sc}</div>
-                <div style={{fontSize:12.5,color:"rgba(255,255,255,.7)",fontWeight:500}}>{lb}</div>
-              </div>
-            ))}
-          </div>
+          <p style={{color:"rgba(255,255,255,.45)",fontSize:13.5}}>{lang==="ru"?"Выберите раздел для начала":lang==="en"?"Select a section to begin":"Boshlash uchun bo'limni tanlang"}</p>
         </div>
         {/* Wave */}
         <div className="hero-wave">
@@ -407,9 +445,54 @@ export default function App(){
           </svg>
         </div>
       </section>
-      {/* ── FORM SECTION ── */}
-      <div style={{maxWidth:640,margin:"0 auto",padding:"8px 16px 48px"}}>
-        <div className="au"><NameForm t={t.home} onStart={startTest}/></div>
+      {/* ── SECTION PICKER + FORM ── */}
+      <div style={{maxWidth:760,margin:"0 auto",padding:"16px 16px 48px"}}>
+        <div className="au" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14,marginBottom:24}}>
+          {/* Hardcoded section 1: Alcana Jamoasi (placeholder uses existing QS) */}
+          {(()=>{const isSel=selectedSection==="alcana";return(
+            <button onClick={()=>setSelectedSection("alcana")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>🏢</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Alcana Jamoasi</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"Внутренние правила, культура компании и рабочий процесс":lang==="en"?"Internal rules, company culture and work process":"Ichki tartib qoidalari, kompaniya madaniyati va ish jarayoni"}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 27+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+            </button>
+          );})()}
+          {/* Hardcoded section 2: amoCRM bo'limi */}
+          {(()=>{const isSel=selectedSection==="amocrm";return(
+            <button onClick={()=>setSelectedSection("amocrm")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>📋</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>amoCRM bo'limi</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{lang==="ru"?"amoCRM и взаимодействие с клиентами":lang==="en"?"amoCRM and customer interaction":"amoCRM va mijoz bilan muomala"}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · 27+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+            </button>
+          );})()}
+          {/* DB-added sections (managed via admin) */}
+          {dbSections.map(s=>{
+            const title=lang==="ru"?s.title_ru:lang==="en"?s.title_en:s.title_uz;
+            const qc=s.questions?.length||0;
+            const isSel = typeof selectedSection==="object" && selectedSection?.id===s.id;
+            return(
+              <button key={s.id} onClick={()=>qc>0&&setSelectedSection(s)} disabled={qc===0} className="card" style={{textAlign:"left",cursor:qc===0?"not-allowed":"pointer",padding:20,opacity:qc===0?.5:1,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                  <span style={{fontSize:26}}>📚</span>
+                  <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{title}</span>
+                </div>
+                <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>{qc} {lang==="ru"?"вопросов":lang==="en"?"questions":"savol"} · {s.pass_threshold}+ {lang==="ru"?"для прохождения":lang==="en"?"to pass":"to'g'ri javob"}</div>
+              </button>
+            );
+          })}
+        </div>
+        {selectedSection ? (
+          <div className="au"><NameForm t={t.home} onStart={startTest}/></div>
+        ) : (
+          <div className="au" style={{textAlign:"center",padding:24,color:"#9ca3af",fontSize:14,fontWeight:500}}>
+            ↑ {lang==="ru"?"Выберите раздел выше":lang==="en"?"Pick a section above":"Yuqoridagi bo'limni tanlang"}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -487,9 +570,9 @@ export default function App(){
   // RESULT PAGE
   // ─────────────────────────────────────────
   if(page==="result"){
-    const s=score??0,isPassed=s>=27,isRetry=s>=20&&s<27&&attempt===1,isFailed=!isPassed&&!isRetry;
+    const s=score??0,isPassed=s>=passT,isRetry=s>=retryT&&s<passT&&attempt===1,isFailed=!isPassed&&!isRetry;
     const cl=isPassed?"#16a34a":isRetry?"#f59e0b":"#ef4444";
-    const circ=2*Math.PI*62,dash=(s/30)*circ;
+    const circ=2*Math.PI*62,dash=(s/totalQ)*circ;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
         <style>{CSS}</style>
@@ -507,7 +590,7 @@ export default function App(){
                 strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 84 84)"
                 style={{transition:"stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)",filter:`drop-shadow(0 0 6px ${cl}66)`}}/>
               <text x="84" y="79" textAnchor="middle" fill={cl} fontSize="30" fontWeight="900" fontFamily="Inter,sans-serif">{s}</text>
-              <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ 30</text>
+              <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ {totalQ}</text>
             </svg>
             {/* Category breakdown */}
             {Object.keys(catS).length>0&&(
@@ -573,6 +656,13 @@ export default function App(){
           <span style={{width:7,height:7,borderRadius:"50%",background:sbSt==="cloud"?"#16a34a":"#9ca3af",display:"inline-block"}}/>
           {sbSt==="cloud"?t.adm.sb:t.adm.lc}
         </div>
+        {/* Admin Tabs */}
+        <div style={{display:"flex",gap:6,marginBottom:20,borderBottom:"1.5px solid #e5e7eb"}}>
+          {[{k:"results",label:lang==="ru"?"Результаты":lang==="en"?"Results":"Natijalar"},{k:"questions",label:lang==="ru"?"Разделы и вопросы":lang==="en"?"Sections & Questions":"Bo'limlar va savollar"}].map(({k,label})=>(
+            <button key={k} onClick={()=>setAdminTab(k as any)} style={{background:"transparent",border:"none",cursor:"pointer",padding:"10px 18px",fontSize:14,fontWeight:700,fontFamily:"inherit",color:adminTab===k?"#16a34a":"#6b7280",borderBottom:adminTab===k?"2.5px solid #16a34a":"2.5px solid transparent",marginBottom:-2}}>{label}</button>
+          ))}
+        </div>
+        {adminTab==="results" && (<>
         {/* Stats */}
         <div style={{display:"flex",gap:12,marginBottom:22,flexWrap:"wrap"}}>
           {[["📊",t.adm.tot,cnt.all,"#3b82f6","#eff6ff","#dbeafe"],["✅",t.adm.pass,cnt.passed,"#16a34a","#f0fdf4","#bbf7d0"],["⚠️",t.adm.ret,cnt.retry,"#f59e0b","#fffbeb","#fde68a"],["❌",t.adm.fail,cnt.failed,"#ef4444","#fff5f5","#fecaca"]].map(([ic,lb,v,cl,bg,bc],i)=>(
@@ -629,6 +719,42 @@ export default function App(){
             onClick={()=>{if(window.confirm("Clear all local data?")){{localStorage.removeItem(LK);setResults([]);}}}}>
             {t.adm.clr}
           </button>
+        )}
+        </>)}
+        {adminTab==="questions" && (
+          managingSectionId ? (
+            <QuestionsList
+              sectionId={managingSectionId}
+              lang={lang as any}
+              onEditQuestion={q => setEditingQuestion(q)}
+              onAddQuestion={() => setEditingQuestion("new")}
+              onBack={() => setManagingSectionId(null)}
+              refreshKey={adminRefresh}
+            />
+          ) : (
+            <AdminQuestions
+              lang={lang as any}
+              onEditSection={s => setEditingSection(s ?? "new")}
+              onAddQuestion={sectionId => { setManagingSectionId(sectionId); setEditingQuestion("new"); }}
+              onManageQuestions={sectionId => setManagingSectionId(sectionId)}
+              refreshKey={adminRefresh}
+            />
+          )
+        )}
+        {editingSection !== null && (
+          <SectionFormModal
+            section={editingSection === "new" ? null : editingSection}
+            onClose={() => setEditingSection(null)}
+            onSaved={() => { setEditingSection(null); setAdminRefresh(v=>v+1); }}
+          />
+        )}
+        {editingQuestion !== null && managingSectionId && (
+          <QuestionFormModal
+            sectionId={managingSectionId}
+            question={editingQuestion === "new" ? null : editingQuestion}
+            onClose={() => setEditingQuestion(null)}
+            onSaved={() => { setEditingQuestion(null); setAdminRefresh(v=>v+1); }}
+          />
         )}
       </div>
     </div>
