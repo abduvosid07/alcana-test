@@ -339,14 +339,33 @@ export default function App(){
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
 
   const submitTest=async()=>{
-    const qs=QS[lang];let s=0;const ck=["company","values","hr","conduct","innovation"];const cs={};ck.forEach(k=>cs[k]=0);
-    qs.forEach((q,i)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
+    const curQs:any[] = activeDbSection
+      ? (activeDbSection.questions||[]).map(dq=>({ans:dq.correct_index}))
+      : QS[lang];
+    let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
+    curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     setScore(s);setCatS(cs);
-    const status=s>=27?"passed":s>=20?"retry":"failed";
+    const pT = activeDbSection ? activeDbSection.pass_threshold : 27;
+    const rT = activeDbSection ? activeDbSection.retry_threshold : 20;
+    const status=s>=pT?"passed":s>=rT?"retry":"failed";
     setSbSt("local");
     if(SB_URL && SB_KEY){
       try{
-        const r=await fetch(`${SB_URL}/rest/v1/assessment_results`,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({name:cand.name,surname:cand.surname,score:s,attempt,status,meta:{cats:cs}})});
+        const r=await fetch(`${SB_URL}/rest/v1/assessment_results`,{method:"POST",headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({
+          name:cand.name,
+          surname:cand.surname,
+          score:s,
+          attempt,
+          status,
+          meta:{
+            cats:cs,
+            section_id: activeDbSection?.id || null,
+            section_title_uz: activeDbSection?.title_uz || "Alcana Group (default)",
+            total: curQs.length,
+            pass_threshold: pT,
+            retry_threshold: rT,
+          },
+        })});
         if(r.ok)setSbSt("cloud");
       }catch{}
     }
@@ -354,7 +373,7 @@ export default function App(){
   };
 
   const retryTest=()=>{setAttempt(a=>a+1);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));};
-  const goHome=()=>{setCand({name:"",surname:""});setAnswers({});setCur(0);setScore(null);setAttempt(1);nav(()=>setPage("home"),-1);};
+  const goHome=()=>{setCand({name:"",surname:""});setAnswers({});setCur(0);setScore(null);setAttempt(1);setActiveDbSection(null);nav(()=>setPage("home"),-1);};
   const goLogin=()=>{setAp("");setAe("");setPage("login");};
   const doLogin=async()=>{
     if(ap!==ADMIN_PASS){setAe(T[lang].adm.wrong);return;}setAe("");setPage("admin");
@@ -383,7 +402,19 @@ export default function App(){
     a.href=u;a.setAttribute("download","alcana_results.csv");a.click();
   };
 
-  const t=T[lang],qs=QS[lang],q=qs[cur],answered=Object.keys(answers).length;
+  const t=T[lang];
+  const qs:any = activeDbSection
+    ? (activeDbSection.questions||[]).map(dq=>({
+        q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:dq.text_uz,
+        opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:o.text_uz),
+        ans: dq.correct_index,
+      }))
+    : QS[lang];
+  const total = qs.length || 1;
+  const passT = activeDbSection ? activeDbSection.pass_threshold : 27;
+  const retryT = activeDbSection ? activeDbSection.retry_threshold : 20;
+  const q = qs[cur];
+  const answered = Object.keys(answers).length;
   const slideClass=sd>0?"sr":"sl";
 
   // ─────────────────────────────────────────
@@ -512,7 +543,7 @@ export default function App(){
   // RESULTS PAGE
   // ─────────────────────────────────────────
   if(page === "results" && score !== null) {
-    const isPassed=score>=27,isRetry=score>=20&&score<27;
+    const isPassed=score>=passT,isRetry=score>=retryT&&score<passT;
     const cl=isPassed?"#16a34a":isRetry?"#d97706":"#dc2626";
     const title=isPassed?t.res.cong:isRetry?t.res.again:t.res.sorry;
     return(
@@ -522,8 +553,8 @@ export default function App(){
         <div style={{maxWidth:440,margin:"40px auto",padding:"0 16px"}}>
           <div className="card card-p-lg bi" style={{textAlign:"center",boxShadow:"0 20px 40px rgba(0,0,0,.08)"}}>
             <h2 style={{fontSize:28,fontWeight:900,color:cl,marginBottom:6,letterSpacing:"-.02em"}}>{title}</h2>
-            <div style={{fontSize:68,fontWeight:900,color:cl,margin:"14px 0 6px",letterSpacing:"-.04em"}}>{score}<span style={{fontSize:24,color:"#9ca3af",fontWeight:500}}>/30</span></div>
-            <div style={{fontSize:18,fontWeight:800,color:"#111827",marginBottom:20}}>{Math.round((score/30)*100)}%</div>
+            <div style={{fontSize:68,fontWeight:900,color:cl,margin:"14px 0 6px",letterSpacing:"-.04em"}}>{score}<span style={{fontSize:24,color:"#9ca3af",fontWeight:500}}>/{total}</span></div>
+            <div style={{fontSize:18,fontWeight:800,color:"#111827",marginBottom:20}}>{Math.round((score/total)*100)}%</div>
             <div style={{background:"#f9fafb",borderRadius:12,padding:"14px 16px",marginBottom:18,fontSize:14,color:isPassed?"#166534":isRetry?"#92400e":"#991b1b",lineHeight:1.7,textAlign:"left"}}>
               {isPassed?t.res.passM:isRetry?t.res.retryM:t.res.failM}
             </div>
