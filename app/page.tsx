@@ -142,13 +142,13 @@ function deepCyrl(o:any):any{
 }
 
 const T:any={
-  uz:{lang:"🇺🇿 UZ",h:{admin:"Admin",mus:"🌊 Musiqa",musOff:"🔇 Musiqa",exit:"Chiqish"},home:{badge:"Yangi Xodim Testi",hero:"Alcana Group",sub:"Yangi xodimlarni baholash platformasi",dur:"30 savol · ~15 daqiqa",info:"Ma'lumotlaringizni kiriting",fnL:"Ism",fnP:"Ismingiz...",lnL:"Familiya",lnP:"Familiyangiz...",start:"Testni Boshlash →",err:"Iltimos, ism va familiyangizni kiriting!",hint:"Tinch okean musiqasi uchun yuqoridagi tugmani bosing 🌊",s27:"O'tdi",s20:"Qayta",s0:"O'tmadi"},test:{q:"Savol",ans:"javoblandi",prev:"← Oldingi",next:"Keyingi →",sub:"Testni Yakunlash",unans:"ta javobsiz",jump:"Tez o'tish:",clear:"Javobni o'zgartirish",att:"urinish"},res:{cong:"Tabriklaymiz!",again:"Yana bir bor!",sorry:"Afsuski...",passM:"🎉 Siz Alcana Group jamoasiga to'liq loyiqsiz! HR bo'limi siz bilan tez orada bog'lanadi.",retryM:"Siz chegaradan o'tdingiz! Materiallarni qayta o'qib chiqing va ikkinchi urinishda muvaffaqiyat qozing.",failM:"Bu safar kutilgan natijaga erisha olmadingiz. Kuchingizni to'plab, keyinroq qayta murojaat qilishingiz mumkin.",retry:"🔄 Qayta urinish",home:"🏠 Bosh sahifa",cloud:"☁️ Bulutga saqlandi",local:"💾 Qurilmaga saqlandi",cats:["Kompaniya","Qadriyatlar","HR Siyosat","Xulq-Atvor","Innovatsiya"]},adm:{title:"Admin Boshqaruv Paneli",pLbl:"Parolni kiriting...",login:"Kirish →",wrong:"❌ Noto'g'ri parol!",tot:"Jami",pass:"O'tdi",ret:"Qayta",fail:"O'tmadi",all:"Barchasi",search:"Ism bo'yicha...",none:"Natija topilmadi",hdrs:["#","Ism Familiya","Ball","%","Urinish","Holat","Sana"],exp:"📊 CSV",clr:"🗑️ Tozalash",pL:"✅ O'tdi",rL:"⚠️ Qayta",fL:"❌ O'tmadi",sub:"Faqat vakolatli menejerlar",sb:"☁️ Supabase",lc:"💾 Mahalliy"},mot:["Ajoyib! 🌊","Zo'r! ✨","Davom eting! 💪","A'lo! 🎯","Kuchli! 🔥","Olg'a! 🚀"]},
-  ru:{lang:"🇷🇺 RU",h:{admin:"Админ",mus:"🌊 Музыка",musOff:"🔇 Музыка",exit:"Выход"},home:{badge:"Тест нового сотрудника",hero:"Alcana Group",sub:"Платформа адаптации сотрудников",dur:"30 вопросов · ~15 минут",info:"Введите ваши данные",fnL:"Имя",fnP:"Ваше имя...",lnL:"Фамилия",lnP:"Ваша фамилия...",start:"Начать тест →",err:"Пожалуйста, введите имя и фамилию!",hint:"Нажмите кнопку выше для звуков океана 🌊",s27:"Прошёл",s20:"Повтор",s0:"Не прошёл"},test:{q:"Вопрос",ans:"отвечено",prev:"← Назад",next:"Далее →",sub:"Завершить тест",unans:"без ответа",jump:"Быстрый переход:",clear:"Изменить ответ",att:"попытка"},res:{cong:"Поздравляем!",again:"Ещё раз!",sorry:"К сожалению...",passM:"🎉 Вы полностью подходите для вступления в команду Alcana Group!",retryM:"Вы перешли порог! Повторно изучите материалы и попробуйте снова.",failM:"На этот раз не удалось достичь результата. Обращайтесь позднее.",retry:"🔄 Повторить",home:"🏠 Главная",cloud:"☁️ Сохранено в облаке",local:"💾 Сохранено на устройстве",cats:["Компания","Ценности","HR Политика","Поведение","Инновации"]},adm:{title:"Панель администратора",pLbl:"Введите пароль...",login:"Войти →",wrong:"❌ Неверный пароль!",tot:"Всего",pass:"Прошли",ret:"Повтор",fail:"Не прошли",all:"Все",search:"Поиск по имени...",none:"Результатов не найдено",hdrs:["#","Имя Фамилия","Балл","%","Попытка","Статус","Дата"],exp:"📊 CSV",clr:"🗑️ Очистить",pL:"✅ Прошёл",rL:"⚠️ Повтор",fL:"❌ Не прошёл",sub:"Только авторизованные менеджеры",sb:"☁️ Supabase",lc:"💾 Локально"},mot:["Отлично! 🌊","Здорово! ✨","Продолжайте! 💪","Превосходно! 🎯","Сильно! 🔥","Вперёд! 🚀"]},
-  en:{lang:"🇬🇧 EN",h:{admin:"Admin",mus:"🌊 Music",musOff:"🔇 Music",exit:"Exit"},home:{badge:"New Employee Test",hero:"Alcana Group",sub:"Onboarding Assessment Platform",dur:"30 questions · ~15 minutes",info:"Enter your information",fnL:"First Name",fnP:"Your first name...",lnL:"Last Name",lnP:"Your last name...",start:"Start Test →",err:"Please enter your first and last name!",hint:"Click the button above for ocean sounds 🌊",s27:"Passed",s20:"Retry",s0:"Failed"},test:{q:"Question",ans:"answered",prev:"← Previous",next:"Next →",sub:"Submit Test",unans:"unanswered",jump:"Quick jump:",clear:"Change answer",att:"attempt"},res:{cong:"Congratulations!",again:"Try Again!",sorry:"Unfortunately...",passM:"🎉 You are fully eligible to join the Alcana Group team! HR will contact you soon.",retryM:"You crossed the threshold! Review the materials and succeed on your second attempt.",failM:"This time you didn't reach the expected result. Gather your strength and reapply later.",retry:"🔄 Retry",home:"🏠 Home",cloud:"☁️ Saved to cloud",local:"💾 Saved to device",cats:["Company","Values","HR Policy","Conduct","Innovation"]},adm:{title:"Admin Control Panel",pLbl:"Enter password...",login:"Login →",wrong:"❌ Wrong password!",tot:"Total",pass:"Passed",ret:"Retry",fail:"Failed",all:"All",search:"Search by name...",none:"No results found",hdrs:["#","Full Name","Score","%","Attempt","Status","Date"],exp:"📊 CSV",clr:"🗑️ Clear",pL:"✅ Passed",rL:"⚠️ Retry",fL:"❌ Failed",sub:"Authorized managers only",sb:"☁️ Supabase",lc:"💾 Local"},mot:["Amazing! 🌊","Great! ✨","Keep going! 💪","Excellent! 🎯","Strong! 🔥","Forward! 🚀"]}
+  uz:{lang:"UZ",h:{admin:"Admin",mus:"🌊 Musiqa",musOff:"🔇 Musiqa",exit:"Chiqish"},home:{badge:"Yangi Xodim Testi",hero:"Alcana Group",sub:"Yangi xodimlarni baholash platformasi",dur:"30 savol · ~15 daqiqa",info:"Ma'lumotlaringizni kiriting",fnL:"Ism",fnP:"Ismingiz...",lnL:"Familiya",lnP:"Familiyangiz...",start:"Testni Boshlash →",err:"Iltimos, ism va familiyangizni kiriting!",hint:"Tinch okean musiqasi uchun yuqoridagi tugmani bosing 🌊",s27:"O'tdi",s20:"Qayta",s0:"O'tmadi"},test:{q:"Savol",ans:"javoblandi",prev:"← Oldingi",next:"Keyingi →",sub:"Testni Yakunlash",unans:"ta javobsiz",jump:"Tez o'tish:",clear:"Javobni o'zgartirish",att:"urinish"},res:{cong:"Tabriklaymiz!",again:"Yana bir bor!",sorry:"Afsuski...",passM:"🎉 Siz Alcana Group jamoasiga to'liq loyiqsiz! HR bo'limi siz bilan tez orada bog'lanadi.",retryM:"Siz chegaradan o'tdingiz! Materiallarni qayta o'qib chiqing va ikkinchi urinishda muvaffaqiyat qozing.",failM:"Bu safar kutilgan natijaga erisha olmadingiz. Kuchingizni to'plab, keyinroq qayta murojaat qilishingiz mumkin.",retry:"🔄 Qayta urinish",home:"🏠 Bosh sahifa",cloud:"☁️ Bulutga saqlandi",local:"💾 Qurilmaga saqlandi",cats:["Kompaniya","Qadriyatlar","HR Siyosat","Xulq-Atvor","Innovatsiya"]},adm:{title:"Admin Boshqaruv Paneli",pLbl:"Parolni kiriting...",login:"Kirish →",wrong:"❌ Noto'g'ri parol!",tot:"Jami",pass:"O'tdi",ret:"Qayta",fail:"O'tmadi",all:"Barchasi",search:"Ism bo'yicha...",none:"Natija topilmadi",hdrs:["#","Ism Familiya","Ball","%","Urinish","Holat","Sana"],exp:"📊 CSV",clr:"🗑️ Tozalash",pL:"✅ O'tdi",rL:"⚠️ Qayta",fL:"❌ O'tmadi",sub:"Faqat vakolatli menejerlar",sb:"☁️ Supabase",lc:"💾 Mahalliy"},mot:["Ajoyib! 🌊","Zo'r! ✨","Davom eting! 💪","A'lo! 🎯","Kuchli! 🔥","Olg'a! 🚀"]},
+  ru:{lang:"RU",h:{admin:"Админ",mus:"🌊 Музыка",musOff:"🔇 Музыка",exit:"Выход"},home:{badge:"Тест нового сотрудника",hero:"Alcana Group",sub:"Платформа адаптации сотрудников",dur:"30 вопросов · ~15 минут",info:"Введите ваши данные",fnL:"Имя",fnP:"Ваше имя...",lnL:"Фамилия",lnP:"Ваша фамилия...",start:"Начать тест →",err:"Пожалуйста, введите имя и фамилию!",hint:"Нажмите кнопку выше для звуков океана 🌊",s27:"Прошёл",s20:"Повтор",s0:"Не прошёл"},test:{q:"Вопрос",ans:"отвечено",prev:"← Назад",next:"Далее →",sub:"Завершить тест",unans:"без ответа",jump:"Быстрый переход:",clear:"Изменить ответ",att:"попытка"},res:{cong:"Поздравляем!",again:"Ещё раз!",sorry:"К сожалению...",passM:"🎉 Вы полностью подходите для вступления в команду Alcana Group!",retryM:"Вы перешли порог! Повторно изучите материалы и попробуйте снова.",failM:"На этот раз не удалось достичь результата. Обращайтесь позднее.",retry:"🔄 Повторить",home:"🏠 Главная",cloud:"☁️ Сохранено в облаке",local:"💾 Сохранено на устройстве",cats:["Компания","Ценности","HR Политика","Поведение","Инновации"]},adm:{title:"Панель администратора",pLbl:"Введите пароль...",login:"Войти →",wrong:"❌ Неверный пароль!",tot:"Всего",pass:"Прошли",ret:"Повтор",fail:"Не прошли",all:"Все",search:"Поиск по имени...",none:"Результатов не найдено",hdrs:["#","Имя Фамилия","Балл","%","Попытка","Статус","Дата"],exp:"📊 CSV",clr:"🗑️ Очистить",pL:"✅ Прошёл",rL:"⚠️ Повтор",fL:"❌ Не прошёл",sub:"Только авторизованные менеджеры",sb:"☁️ Supabase",lc:"💾 Локально"},mot:["Отлично! 🌊","Здорово! ✨","Продолжайте! 💪","Превосходно! 🎯","Сильно! 🔥","Вперёд! 🚀"]},
+  en:{lang:"EN",h:{admin:"Admin",mus:"🌊 Music",musOff:"🔇 Music",exit:"Exit"},home:{badge:"New Employee Test",hero:"Alcana Group",sub:"Onboarding Assessment Platform",dur:"30 questions · ~15 minutes",info:"Enter your information",fnL:"First Name",fnP:"Your first name...",lnL:"Last Name",lnP:"Your last name...",start:"Start Test →",err:"Please enter your first and last name!",hint:"Click the button above for ocean sounds 🌊",s27:"Passed",s20:"Retry",s0:"Failed"},test:{q:"Question",ans:"answered",prev:"← Previous",next:"Next →",sub:"Submit Test",unans:"unanswered",jump:"Quick jump:",clear:"Change answer",att:"attempt"},res:{cong:"Congratulations!",again:"Try Again!",sorry:"Unfortunately...",passM:"🎉 You are fully eligible to join the Alcana Group team! HR will contact you soon.",retryM:"You crossed the threshold! Review the materials and succeed on your second attempt.",failM:"This time you didn't reach the expected result. Gather your strength and reapply later.",retry:"🔄 Retry",home:"🏠 Home",cloud:"☁️ Saved to cloud",local:"💾 Saved to device",cats:["Company","Values","HR Policy","Conduct","Innovation"]},adm:{title:"Admin Control Panel",pLbl:"Enter password...",login:"Login →",wrong:"❌ Wrong password!",tot:"Total",pass:"Passed",ret:"Retry",fail:"Failed",all:"All",search:"Search by name...",none:"No results found",hdrs:["#","Full Name","Score","%","Attempt","Status","Date"],exp:"📊 CSV",clr:"🗑️ Clear",pL:"✅ Passed",rL:"⚠️ Retry",fL:"❌ Failed",sub:"Authorized managers only",sb:"☁️ Supabase",lc:"💾 Local"},mot:["Amazing! 🌊","Great! ✨","Keep going! 💪","Excellent! 🎯","Strong! 🔥","Forward! 🚀"]}
 };
 // 4th language: Uzbek in Cyrillic letters, auto-derived from Latin Uzbek
 T["uz-cyrl"]=deepCyrl(T.uz);
-T["uz-cyrl"].lang="🇺🇿 УЗ";
+T["uz-cyrl"].lang="УЗ";
 
 // ─── QUESTIONS ─────────────────────────────────────────────
 const QS={
@@ -524,7 +524,7 @@ export default function App(){
     const curQs:any[] = curDb
       ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index}))
       : selectedSection==="alcana" ? QS_ALCANA
-      : selectedSection==="umumiy" ? QS_UMUMIY
+      : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
       : QS[lang];
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
@@ -532,12 +532,12 @@ export default function App(){
     setScore(s);setCatS(cs);
     const pT = curDb ? curDb.pass_threshold
              : selectedSection==="alcana" ? 43
-             : selectedSection==="umumiy" ? 43
+             : selectedSection==="umumiy" ? 86
              : selectedSection==="amocrm" ? 26
              : 27;
     const rT = curDb ? curDb.retry_threshold
              : selectedSection==="alcana" ? 35
-             : selectedSection==="umumiy" ? 35
+             : selectedSection==="umumiy" ? 70
              : selectedSection==="amocrm" ? 21
              : 20;
     const sectionKey:string = curDb ? `db:${curDb.id}`
@@ -606,19 +606,19 @@ export default function App(){
         ans: dq.correct_index,
       }))
     : selectedSection==="alcana" ? mapMlQs(QS_ALCANA)
-    : selectedSection==="umumiy" ? mapMlQs(QS_UMUMIY)
+    : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
     : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
     : QS[lang]; // legacy fallback (only used if nothing picked yet)
   const q=qs[cur];
   const totalQ = qs.length || 1;
   const passT = dbSec ? dbSec.pass_threshold
               : selectedSection==="alcana" ? 43
-              : selectedSection==="umumiy" ? 43
+              : selectedSection==="umumiy" ? 86
               : selectedSection==="amocrm" ? 26
               : 27;
   const retryT = dbSec ? dbSec.retry_threshold
                : selectedSection==="alcana" ? 35
-               : selectedSection==="umumiy" ? 35
+               : selectedSection==="umumiy" ? 70
                : selectedSection==="amocrm" ? 21
                : 20;
   const sectionTitle = dbSec
@@ -728,7 +728,7 @@ export default function App(){
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("Umumiy test","Общий тест","General test")}</span>
               </div>
               <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Umumiy bilim va kompaniya tartiblari bo'yicha test","Тест по общим знаниям и правилам компании","General knowledge and company rules test")}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {L("savol","вопросов","questions")} · 43+ {L("to'g'ri javob","для прохождения","to pass")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>100 {L("savol","вопросов","questions")} · 86+ {L("to'g'ri javob","для прохождения","to pass")}</div>
             </button>
           );})()}
           {/* DB-added sections (managed via admin) */}
@@ -1034,7 +1034,7 @@ export default function App(){
           let questionsSrc:any[] = [];
           let sourceLabel = "";
           if(skey==="alcana"){questionsSrc=mapMlQs(QS_ALCANA);sourceLabel=m.section_label||"Alcana";}
-          else if(skey==="umumiy"){questionsSrc=mapMlQs(QS_UMUMIY);sourceLabel=m.section_label||"Umumiy";}
+          else if(skey==="umumiy"){questionsSrc=mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);sourceLabel=m.section_label||"Umumiy";}
           else if(skey==="amocrm"){questionsSrc=mapMlQs(QS_AMOCRM);sourceLabel=m.section_label||"amoCRM";}
           else if(skey.startsWith("db:")){
             const id=skey.slice(3);
