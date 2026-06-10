@@ -526,7 +526,7 @@ export default function App(){
       : selectedSection==="alcana" ? QS_ALCANA
       : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
-      : QS[lang];
+      : (QS[lang] || QS.uz || []);
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
     curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     setScore(s);setCatS(cs);
@@ -608,7 +608,7 @@ export default function App(){
     : selectedSection==="alcana" ? mapMlQs(QS_ALCANA)
     : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
     : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
-    : QS[lang]; // legacy fallback (only used if nothing picked yet)
+    : (QS[lang] || QS.uz || []); // legacy fallback (only used if nothing picked yet); guard against missing lang keys (uz-cyrl)
   const q=qs[cur];
   const totalQ = qs.length || 1;
   const passT = dbSec ? dbSec.pass_threshold
