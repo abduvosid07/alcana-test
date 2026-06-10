@@ -752,8 +752,8 @@ export default function App(){
             <span style={{width:7,height:7,borderRadius:"50%",background:"#4ade80",display:"inline-block",boxShadow:"0 0 8px #4ade80"}}/>
             <span style={{color:"rgba(255,255,255,.9)",fontSize:12.5,fontWeight:600,letterSpacing:".03em"}}>{t.home.badge}</span>
           </div>
-          {/* Logo: served from /public/alcana-logo.png (white-on-transparent best) */}
-          <div style={{width:140,height:140,borderRadius:24,background:"rgba(255,255,255,.95)",border:"1.5px solid rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",animation:"float 5s ease-in-out infinite",padding:14,boxShadow:"0 10px 30px rgba(0,0,0,.25)"}}>
+          {/* Logo: served from /public/alcana-logo.png. Big and proud — first impression matters. */}
+          <div style={{width:260,height:260,borderRadius:36,background:"rgba(255,255,255,.97)",border:"1.5px solid rgba(255,255,255,.22)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px",animation:"float 5s ease-in-out infinite",padding:24,boxShadow:"0 20px 50px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.05) inset"}}>
             <img src="/alcana-logo.png" alt="Alcana" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} onError={e=>{(e.target as HTMLImageElement).style.display="none";}}/>
           </div>
           <h1 style={{color:"#fff",fontSize:40,fontWeight:900,letterSpacing:"-.03em",marginBottom:10,lineHeight:1.15}}>{t.home.hero}</h1>
