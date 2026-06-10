@@ -104,6 +104,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;-
 .glass-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:16px;padding:20px 16px;text-align:center;transition:all 250ms;}
 .glass-card:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.22);transform:translateY(-3px);}
 
+/* PICK CARDS (home section picker) */
+.pickcard{position:relative;overflow:hidden;}
+.pickcard::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(22,163,74,.04) 50%,transparent 100%);opacity:0;transition:opacity 300ms;pointer-events:none;}
+.pickcard:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(22,163,74,.18),0 4px 12px rgba(0,0,0,.08);border-color:#86efac!important;}
+.pickcard:hover::before{opacity:1;}
+.pickcard:active{transform:translateY(-1px);}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.45);}50%{box-shadow:0 0 0 10px rgba(22,163,74,0);}}
+.pulse-glow{animation:pulseGlow 2s ease-in-out infinite;}
+
 /* LANG DROPDOWN */
 .lang-dd{position:absolute;top:48px;right:0;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;box-shadow:0 10px 24px rgba(0,0,0,.12);overflow:hidden;z-index:999;min-width:160px;animation:slideDown .2s ease both;}
 .lang-item{padding:12px 16px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .12s;display:flex;align-items:center;gap:10px;border-left:3px solid transparent;}
@@ -488,6 +497,10 @@ export default function App(){
   const[catS,setCatS]=useState({});
   // Picked test section. Can be a hardcoded id ("alcana" | "amocrm") or a DbSection from admin.
   const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|DbSection|null>(null);
+  // Per-question display order for option-shuffling (prevents memorization). Stable for one attempt.
+  const[shuffles,setShuffles]=useState<number[][]>([]);
+  // Seconds remaining in the current test (15 min for alcana/amocrm, 25 min for umumiy).
+  const[timeLeft,setTimeLeft]=useState(0);
   const[dbSections,setDbSections]=useState<DbSection[]>([]);
   const[adminTab,setAdminTab]=useState<"results"|"questions">("results");
   const[editingSection,setEditingSection]=useState<DbSection|"new"|null>(null);
@@ -495,6 +508,7 @@ export default function App(){
   const[editingQuestion,setEditingQuestion]=useState<DbQuestion|"new"|null>(null);
   const[adminRefresh,setAdminRefresh]=useState(0);
   const[mistakesRow,setMistakesRow]=useState<any|null>(null);
+  const[sectionFilt,setSectionFilt]=useState<string>("all");
   const actx=useRef(null);const stopO=useRef(null);
 
   // After hydration, restore the user's saved language from localStorage.
@@ -512,21 +526,49 @@ export default function App(){
   const showToast=msg=>{setToast(msg);setTv(true);setTimeout(()=>setTv(false),1600);};
   const nav=(fn,dir=1)=>{setSd(dir);setSk(k=>k+1);fn();};
 
-  const startTest=useCallback((name,surname)=>{setCand({name,surname});setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));},[]);
+  const startTest=useCallback((name:string,surname:string)=>{
+    // Compute the raw question list for the picked section so we can shuffle option order.
+    const sel = selectedSection;
+    let raw:any[] = [];
+    if(sel && typeof sel==="object") raw = (sel.questions||[]).map((dq:any)=>({opts: dq.options||[]}));
+    else if(sel==="alcana") raw = QS_ALCANA;
+    else if(sel==="umumiy") raw = [...QS_UMUMIY, ...QS_ALCANA];
+    else if(sel==="amocrm") raw = QS_AMOCRM;
+    // Fisher-Yates: build a shuffled permutation of option indices for every question.
+    const newShuffles:number[][] = raw.map((q:any)=>{
+      const n = (q.opts||[]).length || 4;
+      const arr = Array.from({length:n},(_,i)=>i);
+      for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+      return arr;
+    });
+    setShuffles(newShuffles);
+    // Timer: 25 min for the long "Umumiy" test, 15 min for the rest.
+    const durSec = sel==="umumiy" ? 25*60 : 15*60;
+    setTimeLeft(durSec);
+    setCand({name,surname});setAnswers({});setCur(0);setScore(null);
+    nav(()=>setPage("test"));
+  },[selectedSection]);
   const selAns=oi=>{setAnswers(p=>({...p,[cur]:oi}));showToast(T[lang].mot[Math.floor(Math.random()*T[lang].mot.length)]);};
   const clrAns=()=>setAnswers(p=>{const n={...p};delete n[cur];return n;});
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
 
-  const submitTest=async()=>{
+  const submitTest=async(forceFail:boolean=false)=>{
     // Read from the currently active section (DB or hardcoded). qs is already derived above
     // for the render, but we re-derive here because closures can drift mid-quiz.
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
-    const curQs:any[] = curDb
-      ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index}))
+    const curQsRaw:any[] = curDb
+      ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index, opts:(dq.options||[]).map(()=>"") }))
       : selectedSection==="alcana" ? QS_ALCANA
       : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
       : (QS[lang] || QS.uz || []);
+    // Apply shuffles so the stored answer indices line up with what the user actually saw.
+    const curQs:any[] = (shuffles.length===curQsRaw.length)
+      ? curQsRaw.map((q:any,i:number)=>{
+          const sh=shuffles[i];if(!sh||!q.opts||sh.length!==q.opts.length)return q;
+          return{ans:sh.indexOf(q.ans), opts:q.opts};
+        })
+      : curQsRaw;
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
     curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     setScore(s);setCatS(cs);
@@ -545,7 +587,10 @@ export default function App(){
              : selectedSection==="umumiy" ? "umumiy"
              : selectedSection==="amocrm" ? "amocrm"
              : "legacy";
-    const status = s>=pT ? "passed" : (s>=rT && attempt===1 ? "retry" : "failed");
+    // Timer expiry (forceFail) always counts as failed regardless of score.
+    const status = forceFail ? "failed"
+                  : s>=pT ? "passed"
+                  : (s>=rT && attempt===1 ? "retry" : "failed");
     // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
     // Everything else goes into meta.
     const rec:any = {
@@ -567,18 +612,35 @@ export default function App(){
         pass_threshold: pT,
         retry_threshold: rT,
         // Per-question record for the admin mistakes view:
-        // map of {questionIndex: pickedOptionIndex}; -1 means unanswered.
+        // map of {questionIndex: pickedOptionIndex}; -1 means unanswered. Indices are in SHUFFLED display order.
         answers: Object.fromEntries(curQs.map((_,i)=>[i, answers[i]??-1])),
-        // Snapshot of correct answer indices in case section content is later edited.
+        // Snapshot of correct answer indices (also in shuffled display order).
         correct: curQs.map((qq:any)=>qq.ans),
+        // The shuffle permutation used at test time, so admin can replay what the user saw.
+        shuffles: shuffles.length===curQs.length ? shuffles : null,
+        timed_out: forceFail,
       },
     };
     if(status!=="retry"){addLocal({...rec,date:new Date().toLocaleString()});const ok=await sbOp("POST",rec);setSbSt(ok?"cloud":"local");}
     nav(()=>setPage("result"));
   };
 
-  const retryTest=()=>{setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));};
-  const goHome=useCallback(()=>{if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);nav(()=>{setPage("home");setCand({name:"",surname:""});setAttempt(1);setAnswers({});setScore(null);setSelectedSection(null);},-1);},[]);
+  const retryTest=()=>{
+    // Regenerate shuffles + reset timer for the second attempt.
+    setShuffles(prev=>prev.map(sh=>{const a=[...sh];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}));
+    const durSec = selectedSection==="umumiy" ? 25*60 : 15*60;
+    setTimeLeft(durSec);
+    setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));
+  };
+  const goHome=useCallback(()=>{if(stopO.current)stopO.current();if(actx.current){actx.current.close();actx.current=null;}setMusic(false);nav(()=>{setPage("home");setCand({name:"",surname:""});setAttempt(1);setAnswers({});setScore(null);setSelectedSection(null);setShuffles([]);setTimeLeft(0);},-1);},[]);
+  // Timer countdown: tick once per second while on the test page; auto-submit as failed on expiry.
+  useEffect(()=>{
+    if(page!=="test"||timeLeft<=0)return;
+    const id=setTimeout(()=>{
+      if(timeLeft===1){submitTest(true);setTimeLeft(0);} else setTimeLeft(t=>t-1);
+    },1000);
+    return()=>clearTimeout(id);
+  },[page,timeLeft]);
 
   const loginAdmin=async()=>{
     if(ap!==ADMIN_PASS){setAe(t.adm.wrong);return;}setAe("");
@@ -597,9 +659,18 @@ export default function App(){
   // Pick the language variant from a multilingual question record.
   const pickMl=(ml:any):string=>!ml||typeof ml==="string"?ml:lang==="ru"?ml.ru:lang==="en"?ml.en:lang==="uz-cyrl"?toCyrl(ml.uz):ml.uz;
   const mapMlQs=(arr:any[]):any[]=>arr.map((it:any)=>({q:pickMl(it.q),opts:it.opts.map(pickMl),ans:it.ans}));
+  // Apply per-question option shuffles when available so the displayed answer order varies between attempts.
+  const applyShuffles=(arr:any[]):any[]=>{
+    if(!shuffles.length||shuffles.length!==arr.length)return arr;
+    return arr.map((q,i)=>{
+      const sh=shuffles[i];
+      if(!sh||sh.length!==q.opts.length)return q;
+      return{q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:sh.indexOf(q.ans)};
+    });
+  };
   // Derive the active question list + thresholds from selectedSection.
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
-  const qs:any[] = dbSec
+  const qsRaw:any[] = dbSec
     ? (dbSec.questions||[]).map(dq=>({
         q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:lang==="uz-cyrl"?toCyrl(dq.text_uz):dq.text_uz,
         opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:lang==="uz-cyrl"?toCyrl(o.text_uz):o.text_uz),
@@ -609,6 +680,7 @@ export default function App(){
     : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
     : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
     : (QS[lang] || QS.uz || []); // legacy fallback (only used if nothing picked yet); guard against missing lang keys (uz-cyrl)
+  const qs:any[] = applyShuffles(qsRaw);
   const q=qs[cur];
   const totalQ = qs.length || 1;
   const passT = dbSec ? dbSec.pass_threshold
@@ -627,7 +699,7 @@ export default function App(){
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
-  const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase())));
+  const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase()))&&(sectionFilt==="all"||(r.meta?.section_key||"")===sectionFilt||(sectionFilt.startsWith("db:")&&r.meta?.section_key===sectionFilt)));
   const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
   const slideClass=sd>0?"sr":"sl";
 
@@ -680,9 +752,9 @@ export default function App(){
             <span style={{width:7,height:7,borderRadius:"50%",background:"#4ade80",display:"inline-block",boxShadow:"0 0 8px #4ade80"}}/>
             <span style={{color:"rgba(255,255,255,.9)",fontSize:12.5,fontWeight:600,letterSpacing:".03em"}}>{t.home.badge}</span>
           </div>
-          {/* Logo icon */}
-          <div style={{width:88,height:88,borderRadius:24,background:"rgba(255,255,255,.1)",border:"1.5px solid rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",animation:"float 5s ease-in-out infinite",backdropFilter:"blur(8px)"}}>
-            <span style={{fontSize:44}}>🎯</span>
+          {/* Logo: served from /public/alcana-logo.png (white-on-transparent best) */}
+          <div style={{width:140,height:140,borderRadius:24,background:"rgba(255,255,255,.95)",border:"1.5px solid rgba(255,255,255,.18)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 22px",animation:"float 5s ease-in-out infinite",padding:14,boxShadow:"0 10px 30px rgba(0,0,0,.25)"}}>
+            <img src="/alcana-logo.png" alt="Alcana" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}} onError={e=>{(e.target as HTMLImageElement).style.display="none";}}/>
           </div>
           <h1 style={{color:"#fff",fontSize:40,fontWeight:900,letterSpacing:"-.03em",marginBottom:10,lineHeight:1.15}}>{t.home.hero}</h1>
           <p style={{color:"rgba(255,255,255,.72)",fontSize:16,fontWeight:400,marginBottom:6}}>{t.home.sub}</p>
@@ -700,7 +772,7 @@ export default function App(){
         <div className="au" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14,marginBottom:24}}>
           {/* Hardcoded section 1: Alcana Jamoasi (placeholder uses existing QS) */}
           {(()=>{const isSel=selectedSection==="alcana";return(
-            <button onClick={()=>setSelectedSection("alcana")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+            <button onClick={()=>setSelectedSection("alcana")} className="card pickcard au" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"0ms"}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>🏢</span>
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("Alcana Jamoasi","Команда Alcana","Alcana Team")}</span>
@@ -711,7 +783,7 @@ export default function App(){
           );})()}
           {/* Hardcoded section 2: amoCRM bo'limi */}
           {(()=>{const isSel=selectedSection==="amocrm";return(
-            <button onClick={()=>setSelectedSection("amocrm")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+            <button onClick={()=>setSelectedSection("amocrm")} className="card pickcard au" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"120ms"}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>📋</span>
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")}</span>
@@ -722,7 +794,7 @@ export default function App(){
           );})()}
           {/* Hardcoded section 3: Umumiy test (reuses 50 Alcana questions, editable via admin) */}
           {(()=>{const isSel=selectedSection==="umumiy";return(
-            <button onClick={()=>setSelectedSection("umumiy")} className="card" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 200ms"}}>
+            <button onClick={()=>setSelectedSection("umumiy")} className="card pickcard au" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"240ms"}}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>📚</span>
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>{L("Umumiy test","Общий тест","General test")}</span>
@@ -770,6 +842,15 @@ export default function App(){
       </div>
       <Header sub={`${cand.name} ${cand.surname} · ${attempt} ${t.test.att}`}/>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
+        {/* Timer */}
+        {(()=>{const m=Math.floor(timeLeft/60),s=timeLeft%60;const low=timeLeft<=60;return(
+          <div className="card card-p au" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",background:low?"#fef2f2":"#fff",borderColor:low?"#fecaca":"#e5e7eb"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#6b7280"}}>{L("Qolgan vaqt","Осталось","Time left")}</div>
+            <div style={{fontSize:22,fontWeight:900,color:low?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",letterSpacing:".02em"}}>
+              ⏱ {m}:{s<10?"0"+s:s}
+            </div>
+          </div>
+        );})()}
         {/* Progress card */}
         <div className="card card-p au" style={{marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280",marginBottom:10,fontWeight:500}}>
@@ -941,6 +1022,14 @@ export default function App(){
               {f==="all"?t.adm.all:f==="passed"?t.adm.pL:f==="retry"?t.adm.rL:t.adm.fL}
             </button>
           ))}
+          {/* Section filter dropdown */}
+          <select value={sectionFilt} onChange={e=>setSectionFilt(e.target.value)} style={{padding:"8px 14px",borderRadius:20,border:"1.5px solid #e5e7eb",background:"#fff",color:"#374151",fontFamily:"inherit",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+            <option value="all">📂 {L("Barcha bo'limlar","Все разделы","All sections")}</option>
+            <option value="alcana">🏢 Alcana Jamoasi</option>
+            <option value="amocrm">📋 amoCRM bo'limi</option>
+            <option value="umumiy">📚 Umumiy test</option>
+            {dbSections.map(s=><option key={s.id} value={`db:${s.id}`}>📚 {s.title_uz}</option>)}
+          </select>
           <input type="search" value={srch} onChange={e=>setSrch(e.target.value)} placeholder={t.adm.search}
             style={{flex:1,minWidth:160,padding:"9px 14px",borderRadius:20,border:"1.5px solid #e5e7eb",fontSize:13.5,outline:"none",fontFamily:"inherit",background:"#fff"}}/>
           <span style={{fontSize:13,color:"#9ca3af",fontWeight:500}}>{fRes.length} {t.adm.tot.toLowerCase()}</span>
@@ -1036,6 +1125,13 @@ export default function App(){
           if(skey==="alcana"){questionsSrc=mapMlQs(QS_ALCANA);sourceLabel=m.section_label||"Alcana";}
           else if(skey==="umumiy"){questionsSrc=mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);sourceLabel=m.section_label||"Umumiy";}
           else if(skey==="amocrm"){questionsSrc=mapMlQs(QS_AMOCRM);sourceLabel=m.section_label||"amoCRM";}
+          // Replay the shuffle so admin sees the exact option order the user faced.
+          if(m.shuffles&&Array.isArray(m.shuffles)&&m.shuffles.length===questionsSrc.length){
+            questionsSrc=questionsSrc.map((q:any,i:number)=>{
+              const sh=m.shuffles[i];if(!sh||sh.length!==q.opts.length)return q;
+              return{q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:sh.indexOf(q.ans)};
+            });
+          }
           else if(skey.startsWith("db:")){
             const id=skey.slice(3);
             const sec=dbSections.find(s=>s.id===id);
