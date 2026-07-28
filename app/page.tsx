@@ -553,6 +553,9 @@ export default function App(){
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
 
   const submitTest=async(forceFail:boolean=false)=>{
+    // Must be strict === true: onClick={submitTest} would pass the MouseEvent as arg1,
+    // which is truthy and would both force-fail and break JSON.stringify (circular refs).
+    const timedOut=forceFail===true;
     // Read from the currently active section (DB or hardcoded). qs is already derived above
     // for the render, but we re-derive here because closures can drift mid-quiz.
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
@@ -587,8 +590,8 @@ export default function App(){
              : selectedSection==="umumiy" ? "umumiy"
              : selectedSection==="amocrm" ? "amocrm"
              : "legacy";
-    // Timer expiry (forceFail) always counts as failed regardless of score.
-    const status = forceFail ? "failed"
+    // Timer expiry always counts as failed regardless of score.
+    const status = timedOut ? "failed"
                   : s>=pT ? "passed"
                   : (s>=rT && attempt===1 ? "retry" : "failed");
     // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
@@ -618,7 +621,7 @@ export default function App(){
         correct: curQs.map((qq:any)=>qq.ans),
         // The shuffle permutation used at test time, so admin can replay what the user saw.
         shuffles: shuffles.length===curQs.length ? shuffles : null,
-        timed_out: forceFail,
+        timed_out: timedOut,
       },
     };
     if(status!=="retry"){addLocal({...rec,date:new Date().toLocaleString()});const ok=await sbOp("POST",rec);setSbSt(ok?"cloud":"local");}
@@ -752,9 +755,9 @@ export default function App(){
             <span style={{width:7,height:7,borderRadius:"50%",background:"#4ade80",display:"inline-block",boxShadow:"0 0 8px #4ade80"}}/>
             <span style={{color:"rgba(255,255,255,.9)",fontSize:12.5,fontWeight:600,letterSpacing:".03em"}}>{t.home.badge}</span>
           </div>
-          {/* Logo: cropped tight to the lettering so it fills the square. */}
-          <div style={{width:180,height:180,borderRadius:28,background:"rgba(255,255,255,.97)",border:"1.5px solid rgba(255,255,255,.22)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",animation:"float 5s ease-in-out infinite",padding:14,boxShadow:"0 16px 40px rgba(0,0,0,.3)"}}>
-            <img src="/alcana-logo.png" alt="Alcana" style={{width:"100%",height:"auto",maxHeight:"100%",objectFit:"contain"}} onError={e=>{(e.target as HTMLImageElement).style.display="none";}}/>
+          {/* Logo: transparent PNG sits directly on the dark hero — no white container. Soft glow for separation. */}
+          <div style={{maxWidth:340,margin:"0 auto 28px",animation:"float 5s ease-in-out infinite",filter:"drop-shadow(0 6px 18px rgba(22,163,74,.35))"}}>
+            <img src="/alcana-logo.png" alt="Alcana" style={{width:"100%",height:"auto",display:"block"}} onError={e=>{(e.target as HTMLImageElement).style.display="none";}}/>
           </div>
           <h1 style={{color:"#fff",fontSize:40,fontWeight:900,letterSpacing:"-.03em",marginBottom:10,lineHeight:1.15}}>{t.home.hero}</h1>
           <p style={{color:"rgba(255,255,255,.72)",fontSize:16,fontWeight:400,marginBottom:6}}>{t.home.sub}</p>
@@ -889,7 +892,7 @@ export default function App(){
             <button className="btn btn-s" onClick={()=>goQ(-1)} disabled={cur===0} style={{flex:1,opacity:cur===0?.4:1}}>{t.test.prev}</button>
             {cur<qs.length-1
               ?<button className="btn btn-p" onClick={()=>goQ(1)} style={{flex:2}}>{t.test.next}</button>
-              :<button className={`btn btn-p${answered===qs.length?" btn-p-glow":""}`} onClick={submitTest} disabled={answered<qs.length} style={{flex:2}}>
+              :<button className={`btn btn-p${answered===qs.length?" btn-p-glow":""}`} onClick={()=>submitTest()} disabled={answered<qs.length} style={{flex:2}}>
                 {answered<qs.length?`⚠️ ${qs.length-answered} ${t.test.unans}`:t.test.sub}
               </button>}
           </div>
