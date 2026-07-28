@@ -499,7 +499,7 @@ export default function App(){
   const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|DbSection|null>(null);
   // Per-question display order for option-shuffling (prevents memorization). Stable for one attempt.
   const[shuffles,setShuffles]=useState<number[][]>([]);
-  // Seconds remaining in the current test (15 min for alcana/amocrm, 25 min for umumiy).
+  // Seconds remaining in the current test (15 min for alcana/amocrm, 40 min for umumiy).
   const[timeLeft,setTimeLeft]=useState(0);
   const[dbSections,setDbSections]=useState<DbSection[]>([]);
   const[adminTab,setAdminTab]=useState<"results"|"questions">("results");
@@ -542,8 +542,8 @@ export default function App(){
       return arr;
     });
     setShuffles(newShuffles);
-    // Timer: 25 min for the long "Umumiy" test, 15 min for the rest.
-    const durSec = sel==="umumiy" ? 25*60 : 15*60;
+    // Timer: 40 min for the long "Umumiy" test, 15 min for the rest.
+    const durSec = sel==="umumiy" ? 40*60 : 15*60;
     setTimeLeft(durSec);
     setCand({name,surname});setAnswers({});setCur(0);setScore(null);
     nav(()=>setPage("test"));
@@ -631,7 +631,7 @@ export default function App(){
   const retryTest=()=>{
     // Regenerate shuffles + reset timer for the second attempt.
     setShuffles(prev=>prev.map(sh=>{const a=[...sh];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}));
-    const durSec = selectedSection==="umumiy" ? 25*60 : 15*60;
+    const durSec = selectedSection==="umumiy" ? 40*60 : 15*60;
     setTimeLeft(durSec);
     setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));
   };
@@ -702,6 +702,7 @@ export default function App(){
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
+  const timerM=Math.floor(timeLeft/60),timerS=timeLeft%60,timerLow=timeLeft<=60,timerDisp=`${timerM}:${timerS<10?"0"+timerS:timerS}`;
   const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase()))&&(sectionFilt==="all"||(r.meta?.section_key||"")===sectionFilt||(sectionFilt.startsWith("db:")&&r.meta?.section_key===sectionFilt)));
   const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
   const slideClass=sd>0?"sr":"sl";
@@ -844,16 +845,24 @@ export default function App(){
         <div style={{background:"#16a34a",color:"#fff",borderRadius:24,padding:"10px 22px",fontWeight:700,fontSize:14,boxShadow:"0 4px 20px rgba(22,163,74,.45)",whiteSpace:"nowrap",transform:"translateX(-50%)"}}>{toast}</div>
       </div>
       <Header sub={`${cand.name} ${cand.surname} · ${attempt} ${t.test.att}`}/>
-      <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 40px"}}>
+      {/* Compact timer — fixed at bottom so it's always visible while scrolling */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:95,pointerEvents:"none",padding:"8px 12px 12px",background:"linear-gradient(to top, rgba(249,250,251,.97) 65%, transparent)",display:"flex",justifyContent:"center"}}>
+        <div style={{pointerEvents:"auto",display:"inline-flex",alignItems:"center",gap:10,background:timerLow?"#fef2f2":"#fff",border:`1px solid ${timerLow?"#fecaca":"#e5e7eb"}`,borderRadius:999,padding:"7px 14px",boxShadow:"0 2px 14px rgba(0,0,0,.1)",fontSize:12,fontWeight:600,color:"#6b7280"}}>
+          <span style={{fontWeight:800,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",fontSize:13.5}}>⏱ {timerDisp}</span>
+          <span style={{width:1,height:12,background:"#e5e7eb"}}/>
+          <span>📝 <span style={{color:"#111827",fontWeight:700}}>{answered}</span>/{qs.length}</span>
+          <span style={{width:1,height:12,background:"#e5e7eb"}}/>
+          <span>{t.test.q} <span style={{color:"#16a34a",fontWeight:700}}>{cur+1}</span>/{qs.length}</span>
+        </div>
+      </div>
+      <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 76px"}}>
         {/* Timer */}
-        {(()=>{const m=Math.floor(timeLeft/60),s=timeLeft%60;const low=timeLeft<=60;return(
-          <div className="card card-p au" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",background:low?"#fef2f2":"#fff",borderColor:low?"#fecaca":"#e5e7eb"}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#6b7280"}}>{L("Qolgan vaqt","Осталось","Time left")}</div>
-            <div style={{fontSize:22,fontWeight:900,color:low?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",letterSpacing:".02em"}}>
-              ⏱ {m}:{s<10?"0"+s:s}
-            </div>
+        <div className="card card-p au" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",background:timerLow?"#fef2f2":"#fff",borderColor:timerLow?"#fecaca":"#e5e7eb"}}>
+          <div style={{fontSize:13,fontWeight:600,color:"#6b7280"}}>{L("Qolgan vaqt","Осталось","Time left")}</div>
+          <div style={{fontSize:22,fontWeight:900,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",letterSpacing:".02em"}}>
+            ⏱ {timerDisp}
           </div>
-        );})()}
+        </div>
         {/* Progress card */}
         <div className="card card-p au" style={{marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280",marginBottom:10,fontWeight:500}}>
