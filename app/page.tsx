@@ -17,6 +17,11 @@ const ADMIN_PASS = "Alcana2024";
 const LK = "alcana_v5";
 
 // ─── PREMIUM CSS ───────────────────────────────────────────
+// Stable object reference for dangerouslySetInnerHTML. Creating `{__html:CSS}` inline in JSX
+// makes a new object every render, and React re-injects the 9KB CSS on every timer tick
+// (once a second on the test page), forcing full style-recalc/layout/paint and causing
+// visible glitches — most noticeable in uz-cyrl where Cyrillic strings re-flow more.
+const CSS_INNER = {__html: ""};
 const CSS=`
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -121,6 +126,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;-
 .lang-item:hover{background:#f3f4f6;border-left-color:#16a34a;color:#16a34a;}
 .lang-item.active{background:#f0fdf4;border-left-color:#16a34a;color:#166534;font-weight:600;}
 `;
+CSS_INNER.__html = CSS; // fill after CSS is defined; keeps object identity stable across renders
 
 // ─── TRANSLATIONS ──────────────────────────────────────────
 // ─── LATIN → CYRILLIC UZBEK TRANSLITERATION ───────────────
@@ -846,7 +852,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="home") return(
     <div style={{minHeight:"100vh",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style dangerouslySetInnerHTML={{__html:CSS}} />
+      <style dangerouslySetInnerHTML={CSS_INNER} />
       {renderHeader()}
       {/* ── HERO ── */}
       <section className="hero">
@@ -983,7 +989,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="test") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style dangerouslySetInnerHTML={{__html:CSS}} />
+      <style dangerouslySetInnerHTML={CSS_INNER} />
       {/* Toast */}
       <div style={{position:"fixed",top:80,left:"50%",pointerEvents:"none",zIndex:999,opacity:tv?1:0,transition:"opacity .25s",animation:tv?"toastIn .3s cubic-bezier(.4,0,.2,1) both":"none"}}>
         <div style={{background:"#16a34a",color:"#fff",borderRadius:24,padding:"10px 22px",fontWeight:700,fontSize:14,boxShadow:"0 4px 20px rgba(22,163,74,.45)",whiteSpace:"nowrap",transform:"translateX(-50%)"}}>{toast}</div>
@@ -1085,7 +1091,7 @@ export default function App(){
     const circ=2*Math.PI*62,dash=(s/(scoreMax||1))*circ;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-        <style dangerouslySetInnerHTML={{__html:CSS}} />
+        <style dangerouslySetInnerHTML={CSS_INNER} />
         {renderHeader(t.res.title||"Result")}
         <div style={{maxWidth:540,margin:"0 auto",padding:"28px 16px 48px"}}>
           <div className="card card-p-lg si" style={{boxShadow:"0 20px 40px rgba(0,0,0,.1)",textAlign:"center"}}>
@@ -1140,7 +1146,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="login") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style dangerouslySetInnerHTML={{__html:CSS}} />
+      <style dangerouslySetInnerHTML={CSS_INNER} />
       {renderHeader(t.adm.sub)}
       <div style={{maxWidth:380,margin:"60px auto",padding:"0 16px"}}>
         <div className="card card-p-lg si" style={{textAlign:"center",boxShadow:"0 20px 40px rgba(0,0,0,.1)"}}>
@@ -1160,7 +1166,7 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="admin") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <style dangerouslySetInnerHTML={{__html:CSS}} />
+      <style dangerouslySetInnerHTML={CSS_INNER} />
       {renderHeader(t.adm.title)}
       <div style={{maxWidth:1000,margin:"0 auto",padding:"24px 16px 48px"}}>
         {/* Cloud status */}
