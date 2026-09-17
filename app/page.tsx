@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
+import { QS_IQ, QS_PERSONAL, personalMaxPts, type IqQ, type SjtQ, type PersonalModule } from "../lib/newQuestions";
 import AdminQuestions from "../components/AdminQuestions";
 import SectionFormModal from "../components/SectionFormModal";
 import QuestionFormModal from "../components/QuestionFormModal";
@@ -495,8 +496,10 @@ export default function App(){
   const[sbSt,setSbSt]=useState("local");
   const[langOpen,setLangOpen]=useState(false);
   const[catS,setCatS]=useState({});
-  // Picked test section. Can be a hardcoded id ("alcana" | "amocrm") or a DbSection from admin.
-  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|DbSection|null>(null);
+  // Picked test section. Can be a hardcoded id ("alcana" | "amocrm" | "umumiy" | "iq" | "personal") or a DbSection from admin.
+  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|"iq"|"personal"|DbSection|null>(null);
+  // For the "personal" test — which module (Umumiy / Sotuv / Oshpaz / AI menejer / Dizayn / Tseh).
+  const[personalMod,setPersonalMod]=useState<string>("core");
   // Per-question display order for option-shuffling (prevents memorization). Stable for one attempt.
   const[shuffles,setShuffles]=useState<number[][]>([]);
   // Seconds remaining in the current test (15 min for alcana/amocrm, 40 min for umumiy).
@@ -534,6 +537,8 @@ export default function App(){
     else if(sel==="alcana") raw = QS_ALCANA;
     else if(sel==="umumiy") raw = [...QS_UMUMIY, ...QS_ALCANA];
     else if(sel==="amocrm") raw = QS_AMOCRM;
+    else if(sel==="iq") raw = QS_IQ;
+    else if(sel==="personal"){const mod=QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0];raw = mod.qs;}
     // Fisher-Yates: build a shuffled permutation of option indices for every question.
     const newShuffles:number[][] = raw.map((q:any)=>{
       const n = (q.opts||[]).length || 4;
@@ -542,12 +547,12 @@ export default function App(){
       return arr;
     });
     setShuffles(newShuffles);
-    // Timer: 40 min for the long "Umumiy" test, 15 min for the rest.
-    const durSec = sel==="umumiy" ? 40*60 : 15*60;
+    // Timer: 40 min for the long "Umumiy", 20 min for IQ, 15 min for Personal, 15 min for the rest.
+    const durSec = sel==="umumiy" ? 40*60 : sel==="iq" ? 20*60 : sel==="personal" ? 15*60 : 15*60;
     setTimeLeft(durSec);
     setCand({name,surname});setAnswers({});setCur(0);setScore(null);
     nav(()=>setPage("test"));
-  },[selectedSection]);
+  },[selectedSection,personalMod]);
   const selAns=oi=>{setAnswers(p=>({...p,[cur]:oi}));showToast(T[lang].mot[Math.floor(Math.random()*T[lang].mot.length)]);};
   const clrAns=()=>setAnswers(p=>{const n={...p};delete n[cur];return n;});
   const goQ=dir=>nav(()=>setCur(c=>c+dir),dir);
@@ -559,39 +564,67 @@ export default function App(){
     // Read from the currently active section (DB or hardcoded). qs is already derived above
     // for the render, but we re-derive here because closures can drift mid-quiz.
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
+    const isIq = selectedSection==="iq";
+    const isPersonal = selectedSection==="personal";
+    const personalModule = isPersonal ? (QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0]) : null;
     const curQsRaw:any[] = curDb
       ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index, opts:(dq.options||[]).map(()=>"") }))
       : selectedSection==="alcana" ? QS_ALCANA
       : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
+      : isIq ? QS_IQ
+      : isPersonal ? (personalModule!.qs)
       : (QS[lang] || QS.uz || []);
     // Apply shuffles so the stored answer indices line up with what the user actually saw.
     const curQs:any[] = (shuffles.length===curQsRaw.length)
       ? curQsRaw.map((q:any,i:number)=>{
           const sh=shuffles[i];if(!sh||!q.opts||sh.length!==q.opts.length)return q;
+          if(isPersonal){
+            // Personal: options have pts. Rebuild opts array in the shuffled order so pts stay aligned.
+            const shuffledOpts = sh.map((idx:number)=>q.opts[idx]);
+            return{opts:shuffledOpts};
+          }
           return{ans:sh.indexOf(q.ans), opts:q.opts};
         })
       : curQsRaw;
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
-    curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
-    setScore(s);setCatS(cs);
+    if(isPersonal){
+      // SJT: score = sum of pts for the picked option in each question.
+      curQs.forEach((q:any,i:number)=>{
+        const picked = answers[i];
+        if(picked!==undefined && q.opts && q.opts[picked]){
+          s += (q.opts[picked].pts||0);
+        }
+      });
+    } else {
+      curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
+    }
+    setScore(s);setCatS(isPersonal||isIq?{}:cs);
+    // IQ / Personal: no pass/fail thresholds yet — everything counts as "completed".
     const pT = curDb ? curDb.pass_threshold
              : selectedSection==="alcana" ? 43
              : selectedSection==="umumiy" ? 86
              : selectedSection==="amocrm" ? 26
+             : isIq ? 999
+             : isPersonal ? 9999
              : 27;
     const rT = curDb ? curDb.retry_threshold
              : selectedSection==="alcana" ? 35
              : selectedSection==="umumiy" ? 70
              : selectedSection==="amocrm" ? 21
+             : isIq ? 0
+             : isPersonal ? 0
              : 20;
     const sectionKey:string = curDb ? `db:${curDb.id}`
              : selectedSection==="alcana" ? "alcana"
              : selectedSection==="umumiy" ? "umumiy"
              : selectedSection==="amocrm" ? "amocrm"
+             : isIq ? "iq"
+             : isPersonal ? `personal:${personalMod}`
              : "legacy";
-    // Timer expiry always counts as failed regardless of score.
-    const status = timedOut ? "failed"
+    // Timer expiry always counts as failed regardless of score. IQ/Personal are always "completed".
+    const status = (isIq || isPersonal) ? "completed"
+                  : timedOut ? "failed"
                   : s>=pT ? "passed"
                   : (s>=rT && attempt===1 ? "retry" : "failed");
     // assessment_results schema: name, surname, score, attempt, status, meta (jsonb).
@@ -610,8 +643,11 @@ export default function App(){
         section_label: curDb ? curDb.title_uz
                               : selectedSection==="amocrm" ? "amoCRM bo'limi"
                               : selectedSection==="umumiy" ? "Umumiy test"
+                              : selectedSection==="iq" ? "IQ test"
+                              : selectedSection==="personal" ? `Personal test — ${personalModule?.label||""}`
                               : "Alcana Jamoasi",
         total: curQs.length,
+        max_score: isPersonal ? curQs.length*3 : curQs.length,
         pass_threshold: pT,
         retry_threshold: rT,
         // Per-question record for the admin mistakes view:
@@ -631,7 +667,7 @@ export default function App(){
   const retryTest=()=>{
     // Regenerate shuffles + reset timer for the second attempt.
     setShuffles(prev=>prev.map(sh=>{const a=[...sh];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}));
-    const durSec = selectedSection==="umumiy" ? 40*60 : 15*60;
+    const durSec = selectedSection==="umumiy" ? 40*60 : selectedSection==="iq" ? 20*60 : 15*60;
     setTimeLeft(durSec);
     setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));
   };
@@ -668,11 +704,16 @@ export default function App(){
     return arr.map((q,i)=>{
       const sh=shuffles[i];
       if(!sh||sh.length!==q.opts.length)return q;
-      return{q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:sh.indexOf(q.ans)};
+      return{...q,q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:q.ans!==undefined?sh.indexOf(q.ans):undefined};
     });
   };
   // Derive the active question list + thresholds from selectedSection.
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
+  const isIq = selectedSection==="iq";
+  const isPersonal = selectedSection==="personal";
+  const personalModule = isPersonal ? (QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0]) : null;
+  // Uzbek-only sources — apply toCyrl for uz-cyrl, otherwise raw uz text (no ru/en yet).
+  const uzText=(s:string)=>lang==="uz-cyrl"?toCyrl(s):s;
   const qsRaw:any[] = dbSec
     ? (dbSec.questions||[]).map(dq=>({
         q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:lang==="uz-cyrl"?toCyrl(dq.text_uz):dq.text_uz,
@@ -682,6 +723,8 @@ export default function App(){
     : selectedSection==="alcana" ? mapMlQs(QS_ALCANA)
     : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
     : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
+    : isIq ? QS_IQ.map(iq=>({q:uzText(iq.q),opts:iq.opts.map(uzText),ans:iq.ans,svg:iq.svg}))
+    : isPersonal ? personalModule!.qs.map(sq=>({q:uzText(sq.q),opts:sq.opts.map(o=>uzText(o.t)),__personal:true}))
     : (QS[lang] || QS.uz || []); // legacy fallback (only used if nothing picked yet); guard against missing lang keys (uz-cyrl)
   const qs:any[] = applyShuffles(qsRaw);
   const q=qs[cur];
@@ -690,20 +733,33 @@ export default function App(){
               : selectedSection==="alcana" ? 43
               : selectedSection==="umumiy" ? 86
               : selectedSection==="amocrm" ? 26
+              : isIq ? 999
+              : isPersonal ? 9999
               : 27;
   const retryT = dbSec ? dbSec.retry_threshold
                : selectedSection==="alcana" ? 35
                : selectedSection==="umumiy" ? 70
                : selectedSection==="amocrm" ? 21
+               : isIq ? 0
+               : isPersonal ? 0
                : 20;
   const sectionTitle = dbSec
     ? (lang==="ru"?dbSec.title_ru:lang==="en"?dbSec.title_en:lang==="uz-cyrl"?toCyrl(dbSec.title_uz):dbSec.title_uz)
     : selectedSection==="amocrm" ? L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
+    : isIq ? L("IQ test","IQ тест","IQ test")
+    : isPersonal ? `Personal — ${uzText(personalModule?.label||"")}`
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
   const timerM=Math.floor(timeLeft/60),timerS=timeLeft%60,timerLow=timeLeft<=60,timerDisp=`${timerM}:${timerS<10?"0"+timerS:timerS}`;
-  const fRes=results.filter(r=>(filt==="all"||r.status===filt)&&(!srch||`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase()))&&(sectionFilt==="all"||(r.meta?.section_key||"")===sectionFilt||(sectionFilt.startsWith("db:")&&r.meta?.section_key===sectionFilt)));
+  const fRes=results.filter(r=>{
+    if(!(filt==="all"||r.status===filt))return false;
+    if(srch && !`${r.name} ${r.surname}`.toLowerCase().includes(srch.toLowerCase()))return false;
+    if(sectionFilt==="all")return true;
+    const sk = r.meta?.section_key||"";
+    if(sectionFilt==="personal") return sk==="personal" || sk.startsWith("personal:");
+    return sk===sectionFilt;
+  });
   const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
   const slideClass=sd>0?"sr":"sl";
 
@@ -807,6 +863,36 @@ export default function App(){
               <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>100 {L("savol","вопросов","questions")} · 86+ {L("to'g'ri javob","для прохождения","to pass")}</div>
             </button>
           );})()}
+          {/* Hardcoded section 4: IQ test */}
+          {(()=>{const isSel=selectedSection==="iq";return(
+            <button onClick={()=>setSelectedSection("iq")} className="card pickcard au" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"360ms"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>🧠</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>IQ test</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Mantiq, sonli mulohaza, fazoviy va diqqat","Логика, счёт, пространство, внимание","Logic, numeric, spatial & attention")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {L("savol","вопросов","questions")} · 20 {L("daqiqa","минут","min")}</div>
+            </button>
+          );})()}
+          {/* Hardcoded section 5: Personal (SJT) test — dropdown for module */}
+          {(()=>{const isSel=selectedSection==="personal";return(
+            <div className="card pickcard au" style={{textAlign:"left",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"480ms",cursor:"pointer"}} onClick={()=>setSelectedSection("personal")}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>🎯</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Personal test</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Farosat va ishga salohiyat — vaziyat testi","Ситуационный тест — здравомыслие и мотивация к работе","Situational judgment — practical wisdom & work aptitude")}</div>
+              {isSel && (
+                <div style={{marginTop:10}} onClick={e=>e.stopPropagation()}>
+                  <div style={{fontSize:11.5,fontWeight:700,color:"#6b7280",marginBottom:6,letterSpacing:".04em"}}>{L("MODULNI TANLANG","ВЫБЕРИТЕ МОДУЛЬ","PICK A MODULE")}</div>
+                  <select value={personalMod} onChange={e=>setPersonalMod(e.target.value)} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#111827",fontWeight:600,cursor:"pointer",outline:"none"}}>
+                    {QS_PERSONAL.map(m=><option key={m.key} value={m.key}>{uzText(m.label)}</option>)}
+                  </select>
+                  <div style={{fontSize:12,color:"#6b7280",marginTop:8}}>{(QS_PERSONAL.find(m=>m.key===personalMod)?.qs.length||0)} {L("savol","вопросов","questions")} · 15 {L("daqiqa","минут","min")}</div>
+                </div>
+              )}
+            </div>
+          );})()}
           {/* DB-added sections (managed via admin) */}
           {dbSections.map(s=>{
             const title=lang==="ru"?s.title_ru:lang==="en"?s.title_en:s.title_uz;
@@ -877,7 +963,10 @@ export default function App(){
             <span style={{width:24,height:24,borderRadius:"50%",background:"#16a34a",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0}}>{cur+1}</span>
             <span style={{fontSize:12.5,color:"#15803d",fontWeight:700,letterSpacing:".02em"}}>{t.test.q.toUpperCase()}</span>
           </div>
-          <p style={{fontWeight:600,fontSize:16,lineHeight:1.7,marginBottom:24,color:"#111827"}}>{q.q}</p>
+          <p style={{fontWeight:600,fontSize:16,lineHeight:1.7,marginBottom:q.svg?12:24,color:"#111827"}}>{q.q}</p>
+          {q.svg && (
+            <div style={{marginBottom:20,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,padding:8,overflow:"hidden"}} dangerouslySetInnerHTML={{__html:q.svg}} />
+          )}
           {q.opts.map((opt,oi)=>{
             const sel=answers[cur]===oi;
             return(
@@ -924,9 +1013,15 @@ export default function App(){
   // RESULT PAGE
   // ─────────────────────────────────────────
   if(page==="result"){
-    const s=score??0,isPassed=s>=passT,isRetry=s>=retryT&&s<passT&&attempt===1,isFailed=!isPassed&&!isRetry;
-    const cl=isPassed?"#16a34a":isRetry?"#f59e0b":"#ef4444";
-    const circ=2*Math.PI*62,dash=(s/totalQ)*circ;
+    const s=score??0;
+    const isNoPassFail = isIq || isPersonal;
+    const isPassed=!isNoPassFail && s>=passT;
+    const isRetry=!isNoPassFail && s>=retryT && s<passT && attempt===1;
+    const isFailed=!isNoPassFail && !isPassed && !isRetry;
+    const cl=isNoPassFail?"#16a34a":isPassed?"#16a34a":isRetry?"#f59e0b":"#ef4444";
+    // For personal: max = sum of best pts (3 per question). For IQ: max = totalQ.
+    const scoreMax = isPersonal && personalModule ? personalMaxPts(personalModule) : totalQ;
+    const circ=2*Math.PI*62,dash=(s/(scoreMax||1))*circ;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
         <style dangerouslySetInnerHTML={{__html:CSS}} />
@@ -934,8 +1029,8 @@ export default function App(){
         <div style={{maxWidth:540,margin:"0 auto",padding:"28px 16px 48px"}}>
           <div className="card card-p-lg si" style={{boxShadow:"0 20px 40px rgba(0,0,0,.1)",textAlign:"center"}}>
             {/* Emoji */}
-            <div style={{fontSize:64,marginBottom:12,display:"inline-block",animation:isPassed?"bounceIn .7s cubic-bezier(.175,.885,.32,1.275) both":"float 3s ease-in-out infinite"}}>{isPassed?"🏆":isRetry?"💪":"😔"}</div>
-            <h2 style={{fontSize:24,fontWeight:900,color:cl,marginBottom:4,letterSpacing:"-.02em"}}>{isPassed?t.res.cong:isRetry?t.res.again:t.res.sorry}</h2>
+            <div style={{fontSize:64,marginBottom:12,display:"inline-block",animation:(isPassed||isNoPassFail)?"bounceIn .7s cubic-bezier(.175,.885,.32,1.275) both":"float 3s ease-in-out infinite"}}>{isNoPassFail?"✅":isPassed?"🏆":isRetry?"💪":"😔"}</div>
+            <h2 style={{fontSize:24,fontWeight:900,color:cl,marginBottom:4,letterSpacing:"-.02em"}}>{isNoPassFail?L("Test yakunlandi","Тест завершён","Test completed"):isPassed?t.res.cong:isRetry?t.res.again:t.res.sorry}</h2>
             <p style={{color:"#6b7280",fontSize:14.5,marginBottom:24,fontWeight:500}}>{cand.name} {cand.surname}</p>
             {/* Score ring */}
             <svg width="168" height="168" viewBox="0 0 168 168" style={{display:"block",margin:"0 auto 24px"}}>
@@ -944,7 +1039,7 @@ export default function App(){
                 strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 84 84)"
                 style={{transition:"stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)",filter:`drop-shadow(0 0 6px ${cl}66)`}}/>
               <text x="84" y="79" textAnchor="middle" fill={cl} fontSize="30" fontWeight="900" fontFamily="Inter,sans-serif">{s}</text>
-              <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ {totalQ}</text>
+              <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ {scoreMax}</text>
             </svg>
             {/* Category breakdown */}
             {Object.keys(catS).length>0&&(
@@ -963,8 +1058,10 @@ export default function App(){
               </div>
             )}
             {/* Message */}
-            <div style={{background:isPassed?"#f0fdf4":isRetry?"#fefce8":"#fff5f5",border:`1px solid ${isPassed?"#bbf7d0":isRetry?"#fde68a":"#fecaca"}`,borderRadius:12,padding:"14px 16px",marginBottom:18,fontSize:14,color:isPassed?"#166534":isRetry?"#92400e":"#991b1b",lineHeight:1.7,textAlign:"left"}}>
-              {isPassed?t.res.passM:isRetry?t.res.retryM:t.res.failM}
+            <div style={{background:(isNoPassFail||isPassed)?"#f0fdf4":isRetry?"#fefce8":"#fff5f5",border:`1px solid ${(isNoPassFail||isPassed)?"#bbf7d0":isRetry?"#fde68a":"#fecaca"}`,borderRadius:12,padding:"14px 16px",marginBottom:18,fontSize:14,color:(isNoPassFail||isPassed)?"#166534":isRetry?"#92400e":"#991b1b",lineHeight:1.7,textAlign:"left"}}>
+              {isNoPassFail
+                ? L("Rahmat! Test yakunlandi. Natijangiz saqlandi — rahbar ko'rib chiqadi.","Спасибо! Тест завершён. Ваш результат сохранён — руководитель посмотрит.","Thanks! Test completed. Your result is saved — the manager will review it.")
+                : isPassed?t.res.passM:isRetry?t.res.retryM:t.res.failM}
             </div>
             <div style={{fontSize:12,color:"#9ca3af",marginBottom:18}}>{sbSt==="cloud"?t.res.cloud:t.res.local}</div>
             <div style={{display:"flex",gap:10}}>
@@ -1040,6 +1137,9 @@ export default function App(){
             <option value="alcana">🏢 Alcana Jamoasi</option>
             <option value="amocrm">📋 amoCRM bo'limi</option>
             <option value="umumiy">📚 Umumiy test</option>
+            <option value="iq">🧠 IQ test</option>
+            <option value="personal">🎯 Personal test</option>
+            {QS_PERSONAL.map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — {m.label}</option>)}
             {dbSections.map(s=><option key={s.id} value={`db:${s.id}`}>📚 {s.title_uz}</option>)}
           </select>
           <input type="search" value={srch} onChange={e=>setSrch(e.target.value)} placeholder={t.adm.search}
@@ -1059,17 +1159,18 @@ export default function App(){
             <tbody>
               {fRes.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"52px",color:"#d1d5db",fontSize:15}}>{t.adm.none}</td></tr>}
               {fRes.map((r,i)=>{
-                const cl=r.status==="passed"?"#16a34a":r.status==="retry"?"#f59e0b":"#ef4444";
-                const lbl=r.status==="passed"?t.adm.pL:r.status==="retry"?t.adm.rL:t.adm.fL;
-                const cls=r.status==="passed"?"bdg bdg-p":r.status==="retry"?"bdg bdg-r":"bdg bdg-f";
+                const isCompleted = r.status==="completed";
+                const cl=isCompleted?"#2563eb":r.status==="passed"?"#16a34a":r.status==="retry"?"#f59e0b":"#ef4444";
+                const lbl=isCompleted?L("Yakunlandi","Завершён","Completed"):r.status==="passed"?t.adm.pL:r.status==="retry"?t.adm.rL:t.adm.fL;
+                const cls=isCompleted?"bdg":r.status==="passed"?"bdg bdg-p":r.status==="retry"?"bdg bdg-r":"bdg bdg-f";
                 return(
                   <tr key={i}>
                     <td style={{color:"#d1d5db",fontWeight:700,fontSize:12}}>{i+1}</td>
                     <td style={{fontWeight:700,color:"#111827"}}>{r.name} {r.surname}</td>
-                    <td style={{fontWeight:900,color:cl,fontSize:16,letterSpacing:"-.01em"}}>{r.score}<span style={{fontSize:12,fontWeight:400,color:"#9ca3af"}}>/{r.meta?.total||30}</span></td>
-                    <td style={{fontWeight:700,color:cl}}>{Math.round((r.score/(r.meta?.total||30))*100)}%</td>
+                    <td style={{fontWeight:900,color:cl,fontSize:16,letterSpacing:"-.01em"}}>{r.score}<span style={{fontSize:12,fontWeight:400,color:"#9ca3af"}}>/{r.meta?.max_score||r.meta?.total||30}</span></td>
+                    <td style={{fontWeight:700,color:cl}}>{Math.round((r.score/(r.meta?.max_score||r.meta?.total||30))*100)}%</td>
                     <td style={{textAlign:"center",color:"#9ca3af",fontWeight:500}}>{r.attempt}</td>
-                    <td><span className={cls}>{lbl}</span></td>
+                    <td><span className={cls} style={isCompleted?{background:"#dbeafe",color:"#1e40af",border:"1.5px solid rgba(37,99,235,.3)"}:undefined}>{lbl}</span></td>
                     <td style={{color:"#9ca3af",fontSize:12.5}}>{r.created_at?new Date(r.created_at).toLocaleDateString():r.date||""}</td>
                     <td style={{textAlign:"center"}}>
                       {r.meta?.answers ? (
@@ -1137,11 +1238,17 @@ export default function App(){
           if(skey==="alcana"){questionsSrc=mapMlQs(QS_ALCANA);sourceLabel=m.section_label||"Alcana";}
           else if(skey==="umumiy"){questionsSrc=mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);sourceLabel=m.section_label||"Umumiy";}
           else if(skey==="amocrm"){questionsSrc=mapMlQs(QS_AMOCRM);sourceLabel=m.section_label||"amoCRM";}
+          else if(skey==="iq"){questionsSrc=QS_IQ.map(iq=>({q:iq.q,opts:[...iq.opts],ans:iq.ans,svg:iq.svg}));sourceLabel=m.section_label||"IQ test";}
+          else if(skey.startsWith("personal:")){
+            const modKey = skey.slice("personal:".length);
+            const mod = QS_PERSONAL.find(mm=>mm.key===modKey);
+            if(mod){questionsSrc=mod.qs.map(sq=>({q:sq.q,opts:sq.opts.map(o=>({t:o.t,pts:o.pts})),__personal:true}));sourceLabel=m.section_label||`Personal — ${mod.label}`;}
+          }
           // Replay the shuffle so admin sees the exact option order the user faced.
           if(m.shuffles&&Array.isArray(m.shuffles)&&m.shuffles.length===questionsSrc.length){
             questionsSrc=questionsSrc.map((q:any,i:number)=>{
               const sh=m.shuffles[i];if(!sh||sh.length!==q.opts.length)return q;
-              return{q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:sh.indexOf(q.ans)};
+              return{...q,q:q.q,opts:sh.map((idx:number)=>q.opts[idx]),ans:q.ans!==undefined?sh.indexOf(q.ans):undefined};
             });
           }
           else if(skey.startsWith("db:")){
@@ -1153,11 +1260,14 @@ export default function App(){
             }
           }
           const totalCount = m.total || questionsSrc.length || 0;
+          const isPersonalDetail = questionsSrc[0]?.__personal === true;
           const wrongList:number[] = [];
-          for(let i=0;i<totalCount;i++){
-            const picked = ans[i];
-            const cor = correct[i] ?? questionsSrc[i]?.ans;
-            if(picked!==cor)wrongList.push(i);
+          if(!isPersonalDetail){
+            for(let i=0;i<totalCount;i++){
+              const picked = ans[i];
+              const cor = correct[i] ?? questionsSrc[i]?.ans;
+              if(picked!==cor)wrongList.push(i);
+            }
           }
           return(
             <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setMistakesRow(null)}>
@@ -1169,7 +1279,7 @@ export default function App(){
                   <button className="btn btn-s" onClick={()=>setMistakesRow(null)} style={{padding:"6px 12px",fontSize:12.5}}>✕</button>
                 </div>
                 <div style={{fontSize:13,color:"#6b7280",marginBottom:16}}>
-                  {mistakesRow.score} / {totalCount} · {wrongList.length} {L("ta noto'g'ri","ошибок","wrong")}
+                  {mistakesRow.score} / {m.max_score||totalCount}{!isPersonalDetail && <> · {wrongList.length} {L("ta noto'g'ri","ошибок","wrong")}</>}
                 </div>
                 {questionsSrc.length===0 ? (
                   <div style={{padding:16,background:"#fef3c7",borderRadius:8,color:"#92400e",fontSize:13}}>
@@ -1178,10 +1288,37 @@ export default function App(){
                 ) : (
                   questionsSrc.map((qq:any,i:number)=>{
                     const picked = ans[i];
-                    const cor = correct[i] ?? qq.ans;
-                    const isWrong = picked !== cor;
                     const wasUnanswered = picked === -1 || picked === undefined;
                     const showQ = qq.q;
+                    // Personal SJT: show points earned instead of correct/wrong.
+                    if(isPersonalDetail){
+                      const pickedPts = (!wasUnanswered && qq.opts?.[picked]?.pts!==undefined) ? qq.opts[picked].pts : 0;
+                      const ptsColor = pickedPts>=3?"#166534":pickedPts>=2?"#065f46":pickedPts>=1?"#92400e":"#991b1b";
+                      return(
+                        <div key={i} style={{padding:14,marginBottom:10,borderRadius:10,border:"1.5px solid #dbeafe",background:"#eff6ff"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:8}}>
+                            <div style={{fontSize:13,fontWeight:700,color:"#374151"}}>#{i+1}</div>
+                            <div style={{fontSize:12,fontWeight:700,color:ptsColor}}>
+                              {wasUnanswered ? L("Javobsiz","Без ответа","Unanswered") : `+${pickedPts} ${L("ball","балл","pts")}`}
+                            </div>
+                          </div>
+                          <div style={{fontSize:14,color:"#111827",marginBottom:8,lineHeight:1.5}}>{showQ}</div>
+                          {(qq.opts||[]).map((opt:any,oi:number)=>{
+                            const isPicked = oi===picked;
+                            const text = typeof opt==="string" ? opt : opt.t;
+                            const pts = typeof opt==="object" ? (opt.pts||0) : 0;
+                            return(
+                              <div key={oi} style={{fontSize:13,padding:"6px 10px",marginBottom:4,borderRadius:6,background:isPicked?"#dbeafe":"#fff",border:`1px solid ${isPicked?"#93c5fd":"#e5e7eb"}`,color:isPicked?"#1e40af":"#4b5563",fontWeight:isPicked?600:400,display:"flex",justifyContent:"space-between",gap:8}}>
+                                <span>{String.fromCharCode(65+oi)}) {text}</span>
+                                <span style={{color:"#6b7280",fontWeight:700,fontSize:12,flexShrink:0}}>{pts}p{isPicked && <span style={{marginLeft:6,color:"#1e40af"}}>← {L("tanlandi","выбрано","picked")}</span>}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                    const cor = correct[i] ?? qq.ans;
+                    const isWrong = picked !== cor;
                     return(
                       <div key={i} style={{padding:14,marginBottom:10,borderRadius:10,border:`1.5px solid ${isWrong?"#fecaca":"#bbf7d0"}`,background:isWrong?"#fef2f2":"#f0fdf4"}}>
                         <div style={{display:"flex",justifyContent:"space-between",gap:8,marginBottom:8}}>
@@ -1191,6 +1328,7 @@ export default function App(){
                           </div>
                         </div>
                         <div style={{fontSize:14,color:"#111827",marginBottom:8,lineHeight:1.5}}>{showQ}</div>
+                        {qq.svg && <div style={{marginBottom:8,background:"#fff",border:"1px solid #e5e7eb",borderRadius:8,padding:6,overflow:"hidden"}} dangerouslySetInnerHTML={{__html:qq.svg}} />}
                         {(qq.opts||[]).map((opt:string,oi:number)=>{
                           const isCor = oi===cor;
                           const isPicked = oi===picked;
