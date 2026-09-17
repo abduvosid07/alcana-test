@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
 import { QS_IQ, QS_PERSONAL, personalMaxPts, XISLAT_NAMES, RED_FLAG_IDS, type IqQ, type SjtQ, type PersonalModule, type Ml } from "../lib/newQuestions";
 import { evaluateIq, evaluatePersonal, combinedRecommendation, verdictLabel, EVAL_CONFIG, type Lang as EvalLang } from "../lib/evaluation";
@@ -124,8 +124,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f9fafb;color:#111827;-
 
 // ─── TRANSLATIONS ──────────────────────────────────────────
 // ─── LATIN → CYRILLIC UZBEK TRANSLITERATION ───────────────
+// String-level memoization cache. Question texts are stable strings — with 70+ Uzbek
+// questions × 5 fields each, the timer's per-second re-render used to re-transliterate
+// hundreds of strings every tick and caused visible jank in uz-cyrl mode.
+const _cyrlCache = new Map<string,string>();
 function toCyrl(s:string):string{
   if(!s||typeof s!=="string")return s;
+  const hit=_cyrlCache.get(s);
+  if(hit!==undefined)return hit;
   let out=s;
   // multi-char digraphs first
   const multi:[string,string][]=[
@@ -142,6 +148,7 @@ function toCyrl(s:string):string{
   // Note: c→к in Uzbek transliteration (Alcana → Алкана, not Алцана).
   const map:Record<string,string>={a:"а",b:"б",c:"к",d:"д",e:"е",f:"ф",g:"г",h:"ҳ",i:"и",j:"ж",k:"к",l:"л",m:"м",n:"н",o:"о",p:"п",q:"қ",r:"р",s:"с",t:"т",u:"у",v:"в",w:"в",x:"х",y:"й",z:"з",A:"А",B:"Б",C:"К",D:"Д",E:"Е",F:"Ф",G:"Г",H:"Ҳ",I:"И",J:"Ж",K:"К",L:"Л",M:"М",N:"Н",O:"О",P:"П",Q:"Қ",R:"Р",S:"С",T:"Т",U:"У",V:"В",W:"В",X:"Х",Y:"Й",Z:"З","'":"ъ"};
   out=out.replace(/[a-zA-Z']/g,c=>map[c]||c);
+  _cyrlCache.set(s,out);
   return out;
 }
 function deepCyrl(o:any):any{
@@ -499,8 +506,10 @@ export default function App(){
   const[catS,setCatS]=useState({});
   // Picked test section. Can be a hardcoded id ("alcana" | "amocrm" | "umumiy" | "iq" | "personal") or a DbSection from admin.
   const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|"iq"|"personal"|DbSection|null>(null);
-  // For the "personal" test — which module (Umumiy / Sotuv / Oshpaz / AI menejer / Dizayn / Tseh).
-  const[personalMod,setPersonalMod]=useState<string>("core");
+  // For the "personal" test — which POSITION module runs alongside the mandatory core (Umumiy).
+  // Every candidate solves core (10 SJT questions) + the picked position module (6 questions) = 16 total.
+  // "core" is no longer selectable on its own — position modules only.
+  const[personalMod,setPersonalMod]=useState<string>("sotuv");
   // Per-question display order for option-shuffling (prevents memorization). Stable for one attempt.
   const[shuffles,setShuffles]=useState<number[][]>([]);
   // Seconds remaining in the current test (15 min for alcana/amocrm, 40 min for umumiy).
@@ -542,7 +551,13 @@ export default function App(){
     else if(sel==="umumiy") raw = [...QS_UMUMIY, ...QS_ALCANA];
     else if(sel==="amocrm") raw = QS_AMOCRM;
     else if(sel==="iq") raw = QS_IQ;
-    else if(sel==="personal"){const mod=QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0];raw = mod.qs;}
+    else if(sel==="personal"){
+      // Personal test = mandatory core (Umumiy, 10 qs) + picked position module (6 qs). Total 16.
+      const core = QS_PERSONAL.find(m=>m.key==="core");
+      const mod  = QS_PERSONAL.find(m=>m.key===personalMod);
+      const modResolved = (mod && mod.key!=="core") ? mod : QS_PERSONAL.find(m=>m.key!=="core")!;
+      raw = [...(core?.qs||[]), ...modResolved.qs];
+    }
     // Fisher-Yates: build a shuffled permutation of option indices for every question.
     const newShuffles:number[][] = raw.map((q:any)=>{
       const n = (q.opts||[]).length || 4;
@@ -570,14 +585,18 @@ export default function App(){
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
     const isIq = selectedSection==="iq";
     const isPersonal = selectedSection==="personal";
-    const personalModule = isPersonal ? (QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0]) : null;
+    const personalCoreMod = isPersonal ? QS_PERSONAL.find(m=>m.key==="core") : null;
+    const personalPosMod = isPersonal
+      ? (QS_PERSONAL.find(m=>m.key===personalMod && m.key!=="core") || QS_PERSONAL.find(m=>m.key!=="core")!)
+      : null;
+    const personalCoreLen = personalCoreMod ? personalCoreMod.qs.length : 0;
     const curQsRaw:any[] = curDb
       ? (curDb.questions||[]).map(dq=>({ans:dq.correct_index, opts:(dq.options||[]).map(()=>"") }))
       : selectedSection==="alcana" ? QS_ALCANA
       : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
       : isIq ? QS_IQ
-      : isPersonal ? (personalModule!.qs)
+      : isPersonal ? [...(personalCoreMod?.qs||[]), ...(personalPosMod?.qs||[])]
       : (QS[lang] || QS.uz || []);
     // Apply shuffles so the stored answer indices line up with what the user actually saw.
     const curQs:any[] = (shuffles.length===curQsRaw.length)
@@ -652,10 +671,13 @@ export default function App(){
                               : selectedSection==="amocrm" ? "amoCRM bo'limi"
                               : selectedSection==="umumiy" ? "Umumiy test"
                               : selectedSection==="iq" ? "IQ test"
-                              : selectedSection==="personal" ? `Personal test — ${personalModule?.label?.uz||""}`
+                              : selectedSection==="personal" ? `Personal test — Umumiy + ${personalPosMod?.label?.uz||""}`
                               : "Alcana Jamoasi",
         total: curQs.length,
         max_score: isPersonal ? curQs.length*3 : curQs.length,
+        // Personal test structure: first `personalCoreLen` questions are core (Umumiy),
+        // the rest are the picked position module. Evaluation splits scores here.
+        personal_core_len: isPersonal ? personalCoreLen : undefined,
         pass_threshold: pT,
         retry_threshold: rT,
         // Per-question record for the admin mistakes view:
@@ -719,22 +741,31 @@ export default function App(){
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
   const isIq = selectedSection==="iq";
   const isPersonal = selectedSection==="personal";
-  const personalModule = isPersonal ? (QS_PERSONAL.find(m=>m.key===personalMod)||QS_PERSONAL[0]) : null;
-  // Uzbek-only sources — apply toCyrl for uz-cyrl, otherwise raw uz text (no ru/en yet).
-  const uzText=(s:string)=>lang==="uz-cyrl"?toCyrl(s):s;
-  const qsRaw:any[] = dbSec
-    ? (dbSec.questions||[]).map(dq=>({
-        q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:lang==="uz-cyrl"?toCyrl(dq.text_uz):dq.text_uz,
-        opts: (dq.options||[]).map(o=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:lang==="uz-cyrl"?toCyrl(o.text_uz):o.text_uz),
-        ans: dq.correct_index,
-      }))
-    : selectedSection==="alcana" ? mapMlQs(QS_ALCANA)
-    : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
-    : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
-    : isIq ? QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}))
-    : isPersonal ? personalModule!.qs.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>pickMl(o.t)),__personal:true}))
-    : (QS[lang] || QS.uz || []); // legacy fallback (only used if nothing picked yet); guard against missing lang keys (uz-cyrl)
-  const qs:any[] = applyShuffles(qsRaw);
+  // Personal test: mandatory core (Umumiy) + one position module.
+  const personalCoreModule = isPersonal ? QS_PERSONAL.find(m=>m.key==="core") : null;
+  const personalPosModule = isPersonal
+    ? (QS_PERSONAL.find(m=>m.key===personalMod && m.key!=="core") || QS_PERSONAL.find(m=>m.key!=="core")!)
+    : null;
+  // Memoize the raw question list — otherwise uz-cyrl mode transliterates ~350 strings on every
+  // timer tick (once a second on the test page). String-level cache in toCyrl handles repeats,
+  // but skipping the whole map is still much cheaper.
+  const qsRaw:any[] = useMemo(()=>{
+    if(dbSec) return (dbSec.questions||[]).map((dq:any)=>({
+      q: lang==="ru"?dq.text_ru:lang==="en"?dq.text_en:lang==="uz-cyrl"?toCyrl(dq.text_uz):dq.text_uz,
+      opts: (dq.options||[]).map((o:any)=>lang==="ru"?o.text_ru:lang==="en"?o.text_en:lang==="uz-cyrl"?toCyrl(o.text_uz):o.text_uz),
+      ans: dq.correct_index,
+    }));
+    if(selectedSection==="alcana") return mapMlQs(QS_ALCANA);
+    if(selectedSection==="umumiy") return mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);
+    if(selectedSection==="amocrm") return mapMlQs(QS_AMOCRM);
+    if(isIq) return QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}));
+    if(isPersonal){
+      const combined = [...(personalCoreModule?.qs||[]), ...(personalPosModule?.qs||[])];
+      return combined.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>pickMl(o.t)),__personal:true}));
+    }
+    return (QS[lang] || QS.uz || []);
+  }, [selectedSection, personalMod, lang, dbSec]);
+  const qs:any[] = useMemo(()=>applyShuffles(qsRaw), [qsRaw, shuffles]);
   const q=qs[cur];
   const totalQ = qs.length || 1;
   const passT = dbSec ? dbSec.pass_threshold
@@ -756,7 +787,7 @@ export default function App(){
     : selectedSection==="amocrm" ? L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
     : isIq ? L("IQ test","IQ тест","IQ test")
-    : isPersonal ? `Personal — ${pickMl(personalModule?.label||{uz:"",ru:"",en:""})}`
+    : isPersonal ? `Personal — Umumiy + ${pickMl(personalPosModule?.label||{uz:"",ru:"",en:""})}`
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
   const timerM=Math.floor(timeLeft/60),timerS=timeLeft%60,timerLow=timeLeft<=60,timerDisp=`${timerM}:${timerS<10?"0"+timerS:timerS}`;
@@ -899,16 +930,25 @@ export default function App(){
                 <span style={{fontSize:26}}>🎯</span>
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Personal test</span>
               </div>
-              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Farosat va ishga salohiyat — vaziyat testi","Ситуационный тест — здравомыслие и мотивация к работе","Situational judgment — practical wisdom & work aptitude")}</div>
-              {isSel && (
-                <div style={{marginTop:10}} onClick={e=>e.stopPropagation()}>
-                  <div style={{fontSize:11.5,fontWeight:700,color:"#6b7280",marginBottom:6,letterSpacing:".04em"}}>{L("MODULNI TANLANG","ВЫБЕРИТЕ МОДУЛЬ","PICK A MODULE")}</div>
-                  <select value={personalMod} onChange={e=>setPersonalMod(e.target.value)} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#111827",fontWeight:600,cursor:"pointer",outline:"none"}}>
-                    {QS_PERSONAL.map(m=><option key={m.key} value={m.key}>{pickMl(m.label)}</option>)}
-                  </select>
-                  <div style={{fontSize:12,color:"#6b7280",marginTop:8}}>{(QS_PERSONAL.find(m=>m.key===personalMod)?.qs.length||0)} {L("savol","вопросов","questions")} · 15 {L("daqiqa","минут","min")}</div>
-                </div>
-              )}
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Farosat va ishga salohiyat — vaziyat testi. Umumiy qism har lavozim uchun majburiy, plus tanlangan lavozim moduli.","Ситуационный тест — здравомыслие и мотивация к работе. Общая часть обязательна для всех, плюс модуль выбранной должности.","Situational judgment — practical wisdom & work aptitude. Core (Umumiy) is mandatory for every position, plus the picked position's module.")}</div>
+              {isSel && (()=>{
+                // Only position modules are selectable — Umumiy (core) is mandatory and always included.
+                const posModules = QS_PERSONAL.filter(m=>m.key!=="core");
+                const picked = posModules.find(m=>m.key===personalMod) || posModules[0];
+                const coreLen = QS_PERSONAL.find(m=>m.key==="core")?.qs.length || 0;
+                const modLen = picked?.qs.length || 0;
+                return (
+                  <div style={{marginTop:10}} onClick={e=>e.stopPropagation()}>
+                    <div style={{fontSize:11.5,fontWeight:700,color:"#6b7280",marginBottom:6,letterSpacing:".04em"}}>{L("LAVOZIMNI TANLANG","ВЫБЕРИТЕ ДОЛЖНОСТЬ","PICK A POSITION")}</div>
+                    <select value={picked.key} onChange={e=>setPersonalMod(e.target.value)} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#111827",fontWeight:600,cursor:"pointer",outline:"none"}}>
+                      {posModules.map(m=><option key={m.key} value={m.key}>{pickMl(m.label)}</option>)}
+                    </select>
+                    <div style={{fontSize:12,color:"#6b7280",marginTop:8,lineHeight:1.5}}>
+                      {L("Umumiy","Умумий","Umumiy")} ({coreLen}) + {pickMl(picked.label)} ({modLen}) = <b>{coreLen+modLen} {L("savol","вопросов","questions")}</b> · 15 {L("daqiqa","минут","min")}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           );})()}
           {/* DB-added sections (managed via admin) */}
@@ -1038,7 +1078,10 @@ export default function App(){
     const isFailed=!isNoPassFail && !isPassed && !isRetry;
     const cl=isNoPassFail?"#16a34a":isPassed?"#16a34a":isRetry?"#f59e0b":"#ef4444";
     // For personal: max = sum of best pts (3 per question). For IQ: max = totalQ.
-    const scoreMax = isPersonal && personalModule ? personalMaxPts(personalModule) : totalQ;
+    // Personal max = core (10*3=30) + module (6*3=18) = 48. Fallback to totalQ*3 if lookup failed.
+    const scoreMax = isPersonal
+      ? ((personalCoreModule?personalMaxPts(personalCoreModule):0) + (personalPosModule?personalMaxPts(personalPosModule):0)) || totalQ*3
+      : totalQ;
     const circ=2*Math.PI*62,dash=(s/(scoreMax||1))*circ;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
@@ -1157,7 +1200,7 @@ export default function App(){
             <option value="umumiy">📚 Umumiy test</option>
             <option value="iq">🧠 IQ test</option>
             <option value="personal">🎯 Personal test</option>
-            {QS_PERSONAL.map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — {pickMl(m.label)}</option>)}
+            {QS_PERSONAL.filter(m=>m.key!=="core").map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — Umumiy + {pickMl(m.label)}</option>)}
             {dbSections.map(s=><option key={s.id} value={`db:${s.id}`}>📚 {s.title_uz}</option>)}
           </select>
           <input type="search" value={srch} onChange={e=>setSrch(e.target.value)} placeholder={t.adm.search}
@@ -1341,15 +1384,14 @@ export default function App(){
                 {pRes && (
                   <div style={{marginBottom:20}}>
                     <div style={{fontSize:13,fontWeight:800,color:"#111827",marginBottom:10,letterSpacing:".02em"}}>🎯 {L("Farosat / ishga salohiyat","Ситуационная сообразительность","Judgment / work aptitude")}</div>
-                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
-                      {pRes.modulKey === "core" ? (
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5}}>
-                          <span style={{color:"#6b7280"}}>{L("O'zak (Umumiy)","Ядро (общее)","Core")}</span>
-                          <span style={{fontWeight:800,color:pRes.coreBand==="Kuchli"?"#166534":pRes.coreBand==="O'rtacha"?"#92400e":"#991b1b"}}>{pRes.coreScore}/30 — {pRes.coreBand}</span>
-                        </div>
-                      ) : (
-                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5}}>
-                          <span style={{color:"#6b7280"}}>{L("Modul","Модуль","Module")} — {pickMl(pRes.modulLabel)}</span>
+                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12,display:"grid",gap:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5}}>
+                        <span style={{color:"#6b7280"}}>{L("O'zak (Umumiy)","Ядро (Umumiy)","Core (Umumiy)")}</span>
+                        <span style={{fontWeight:800,color:pRes.coreBand==="Kuchli"?"#166534":pRes.coreBand==="O'rtacha"?"#92400e":"#991b1b"}}>{pRes.coreScore}/30 — {pRes.coreBand}</span>
+                      </div>
+                      {pRes.modulKey !== "core" && (
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5,borderTop:"1px solid #e5e7eb",paddingTop:8}}>
+                          <span style={{color:"#6b7280"}}>{L("Lavozim moduli","Модуль должности","Position module")} — {pickMl(pRes.modulLabel)}</span>
                           <span style={{fontWeight:800,color:pRes.modulBand==="Kuchli"?"#166534":pRes.modulBand==="O'rtacha"?"#92400e":"#991b1b"}}>{pRes.modulScore}/18 — {pRes.modulBand}</span>
                         </div>
                       )}
@@ -1405,8 +1447,14 @@ export default function App(){
           else if(skey==="iq"){questionsSrc=QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}));sourceLabel=m.section_label||"IQ test";}
           else if(skey.startsWith("personal:")){
             const modKey = skey.slice("personal:".length);
+            const core = QS_PERSONAL.find(mm=>mm.key==="core");
             const mod = QS_PERSONAL.find(mm=>mm.key===modKey);
-            if(mod){questionsSrc=mod.qs.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>({t:pickMl(o.t),pts:o.pts})),svg:undefined,__personal:true}));sourceLabel=m.section_label||`Personal — ${pickMl(mod.label)}`;}
+            // Personal test = core (Umumiy) + position module. Rebuild the same concatenated order.
+            const combined = [...((modKey==="core"?[]:(core?.qs||[]))), ...(mod?.qs||[])];
+            if(combined.length){
+              questionsSrc = combined.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>({t:pickMl(o.t),pts:o.pts})),svg:undefined,__personal:true}));
+              sourceLabel = m.section_label || `Personal — Umumiy + ${pickMl(mod?.label||{uz:"",ru:"",en:""})}`;
+            }
           }
           // Replay the shuffle so admin sees the exact option order the user faced.
           if(m.shuffles&&Array.isArray(m.shuffles)&&m.shuffles.length===questionsSrc.length){

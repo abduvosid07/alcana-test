@@ -117,27 +117,34 @@ export type PersonalResult = {
 };
 
 export function evaluatePersonal(meta: any): PersonalResult | null {
-  // section_key is "personal:<modKey>". If it's just "personal", assume core.
+  // Every Personal attempt is now: core (Umumiy, 10 SJT) + one position module (6 SJT) = 16 total.
+  // section_key format: "personal:<posModKey>". Legacy "personal:core" attempts (single-block)
+  // are still supported: coreLen falls back to the questions actually stored.
   const skey: string = meta?.section_key || "";
   const modKey = skey.startsWith("personal:") ? skey.slice("personal:".length) : "core";
-  const mod = QS_PERSONAL.find(m => m.key === modKey);
   const core = QS_PERSONAL.find(m => m.key === "core");
-  if (!mod) return null;
+  const posMod = QS_PERSONAL.find(m => m.key === modKey && m.key !== "core");
+  const legacyModOnly = !posMod ? QS_PERSONAL.find(m => m.key === modKey) : null;
+  if (!core && !posMod && !legacyModOnly) return null;
 
   const shuffles: number[][] | null = meta?.shuffles || null;
   const answers = meta?.answers || {};
 
-  // Score the module the candidate actually took. For the core module by itself, module==core.
-  const unshuffled = unshuffleAnswers(answers, shuffles, mod.qs.length);
-  let takenScore = 0;
+  // Combined question sequence: core followed by position module (legacy: just the picked module).
+  const seq = legacyModOnly ? legacyModOnly.qs : [...(core?.qs || []), ...(posMod?.qs || [])];
+  const coreLen = meta?.personal_core_len ?? (legacyModOnly ? (modKey === "core" ? legacyModOnly.qs.length : 0) : (core?.qs.length || 0));
+
+  const unshuffled = unshuffleAnswers(answers, shuffles, seq.length);
+  let coreScore = 0, modulScore = 0;
   const traitSums: Record<string, { s: number; c: number }> = {};
   const redFlags: PersonalResult["redFlags"] = [];
-  mod.qs.forEach((q, i) => {
+  seq.forEach((q, i) => {
     const origIdx = unshuffled[i];
     if (origIdx == null) return;
     const opt = q.opts[origIdx];
     if (!opt) return;
-    takenScore += opt.pts;
+    if (i < coreLen) coreScore += opt.pts;
+    else modulScore += opt.pts;
     for (const x of q.xislat) {
       (traitSums[x] ??= { s: 0, c: 0 });
       traitSums[x].s += opt.pts;
@@ -146,25 +153,11 @@ export function evaluatePersonal(meta: any): PersonalResult | null {
     if (RED_FLAG_IDS.has(q.id) && opt.pts === 0) redFlags.push({ id: q.id, q: q.q });
   });
 
-  // Split into core vs. module contributions. If the candidate took the core module directly,
-  // core score = taken score and module score = 0 (there is no separate module).
-  let coreScore: number, modulScore: number;
-  if (modKey === "core") {
-    coreScore = takenScore;
-    modulScore = 0;
-  } else {
-    // The user only took this module, not core. Store the module score in modulScore,
-    // and leave coreScore = 0 as "not taken" (banded to Zaif here — real join with a separate
-    // core attempt would need a per-candidate lookup which is out of scope for this pass).
-    coreScore = 0;
-    modulScore = takenScore;
-  }
-
   const coreBand: PersonalResult["coreBand"] =
     coreScore >= EVAL_CONFIG.personal.coreStrong ? "Kuchli" :
     coreScore >= EVAL_CONFIG.personal.coreMid ? "O'rtacha" : "Zaif";
   const modulBand: PersonalResult["modulBand"] =
-    modKey === "core" ? "Kuchli" : // when only core is taken, no separate module to band
+    (!posMod && !legacyModOnly) || modKey === "core" ? "Kuchli" :
     modulScore >= EVAL_CONFIG.personal.modStrong ? "Kuchli" :
     modulScore >= EVAL_CONFIG.personal.modMid ? "O'rtacha" : "Zaif";
 
@@ -173,7 +166,8 @@ export function evaluatePersonal(meta: any): PersonalResult | null {
     xislatlar[k] = { label: XISLAT_NAMES[k] || { uz: k, ru: k, en: k }, pct: Math.round((v.s / v.c / 3) * 100) };
   }
 
-  return { modulKey: mod.key, modulLabel: mod.label, coreScore, coreBand, modulScore, modulBand, xislatlar, redFlags };
+  const modResolved = posMod || legacyModOnly || core!;
+  return { modulKey: modResolved.key, modulLabel: modResolved.label, coreScore, coreBand, modulScore, modulBand, xislatlar, redFlags };
 }
 
 // ─── FINAL RECOMMENDATION ───────────────────────────────────
@@ -200,11 +194,18 @@ export function combinedRecommendation(iq: IqResult | null, personal: PersonalRe
       en: `Red flag in honesty/safety questions (${personal.redFlags.length}) — trust concern.`,
     }};
   }
-  if (personal && personal.coreBand === "Zaif" && personal.modulKey === "core") {
+  if (personal && personal.coreBand === "Zaif") {
     return { verdict: "TAVSIYA_ETILMAYDI", color: "red", reason: {
-      uz: "Farosat/ishga salohiyati zaif.",
-      ru: "Ситуационная сообразительность/готовность к работе слабая.",
-      en: "Situational judgment / work aptitude is weak.",
+      uz: `Farosat/ishga salohiyat o'zak balli zaif (${personal.coreScore}/30).`,
+      ru: `Ядро ситуационной сообразительности слабое (${personal.coreScore}/30).`,
+      en: `Core judgment/aptitude is weak (${personal.coreScore}/30).`,
+    }};
+  }
+  if (personal && personal.modulBand === "Zaif" && personal.modulKey !== "core") {
+    return { verdict: "MOS_EMAS", color: "yellow", reason: {
+      uz: `Lavozim moduli bo'yicha farosat zaif (${personal.modulScore}/18).`,
+      ru: `Ситуационные показатели по модулю должности слабые (${personal.modulScore}/18).`,
+      en: `Position-module judgment is weak (${personal.modulScore}/18).`,
     }};
   }
   if (iq && targetRole && iq.rollar[targetRole]) {
