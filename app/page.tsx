@@ -626,8 +626,11 @@ export default function App(){
              : isIq ? "iq"
              : isPersonal ? `personal:${personalMod}`
              : "legacy";
-    // Timer expiry always counts as failed regardless of score. IQ/Personal are always "completed".
-    const status = (isIq || isPersonal) ? "completed"
+    // Timer expiry always counts as failed regardless of score.
+    // IQ/Personal have no pass/fail — Supabase CHECK constraint only allows passed|retry|failed,
+    // so we store them as "passed" and flag meta.no_pass_fail=true; the admin UI reads that flag
+    // to render a neutral "Yakunlandi" badge instead of a green pass.
+    const status = (isIq || isPersonal) ? "passed"
                   : timedOut ? "failed"
                   : s>=pT ? "passed"
                   : (s>=rT && attempt===1 ? "retry" : "failed");
@@ -642,6 +645,7 @@ export default function App(){
       meta: {
         lang,
         cats: cs,
+        no_pass_fail: isIq || isPersonal,
         section_id: curDb?.id || null,
         section_key: sectionKey,
         section_label: curDb ? curDb.title_uz
@@ -764,13 +768,23 @@ export default function App(){
     if(sectionFilt==="personal") return sk==="personal" || sk.startsWith("personal:");
     return sk===sectionFilt;
   });
-  const cnt={all:results.length,passed:results.filter(r=>r.status==="passed").length,retry:results.filter(r=>r.status==="retry").length,failed:results.filter(r=>r.status==="failed").length};
+  // Exclude no_pass_fail rows (IQ/Personal) from pass/retry/fail buckets — they're stored as "passed" for schema compatibility but aren't a pass.
+  const cnt={
+    all: results.length,
+    passed: results.filter(r=>r.status==="passed" && r.meta?.no_pass_fail!==true).length,
+    retry: results.filter(r=>r.status==="retry").length,
+    failed: results.filter(r=>r.status==="failed").length,
+  };
   const slideClass=sd>0?"sr":"sl";
 
   const exportCSV=()=>{const rows=fRes.map((r,i)=>[i+1,`${r.name} ${r.surname}`,r.score,Math.round((r.score/30)*100),r.attempt,r.status,r.created_at?new Date(r.created_at).toLocaleDateString():r.date||""].join(","));const csv=[t.adm.hdrs.join(","),...rows].join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="alcana_results.csv";a.click();};
 
   // ── HEADER ──
-  const Header=({sub})=>(
+  // Rendered as a plain JSX-returning function (not a React component) — a component defined
+  // inside App would get a fresh function identity every render, and every `<Header/>` would
+  // unmount+remount the whole header subtree on every timer tick, closing the lang dropdown
+  // and causing visible glitches on language switches.
+  const renderHeader=(sub?:string)=>(
     <header style={{background:"linear-gradient(135deg,#0f2d1a 0%,#16a34a 60%,#15803d 100%)",padding:"0 24px",height:68,display:"flex",alignItems:"center",gap:14,boxShadow:"0 1px 0 rgba(0,0,0,.15),0 4px 16px rgba(0,0,0,.12)",position:"sticky",top:0,zIndex:100}}>
       <div style={{width:42,height:42,borderRadius:"50%",background:"rgba(255,255,255,.15)",border:"1.5px solid rgba(255,255,255,.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
         <svg width="26" height="26" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50" fill="rgba(255,255,255,.9)"/><text x="50" y="66" textAnchor="middle" fill="#15803d" fontSize="36" fontWeight="900" fontFamily="Inter,sans-serif">A</text></svg>
@@ -802,7 +816,7 @@ export default function App(){
   if(page==="home") return(
     <div style={{minHeight:"100vh",fontFamily:"'Inter',system-ui,sans-serif"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}} />
-      <Header/>
+      {renderHeader()}
       {/* ── HERO ── */}
       <section className="hero">
         <div className="hero-g1"/><div className="hero-g2"/><div className="hero-grid"/>
@@ -934,7 +948,7 @@ export default function App(){
       <div style={{position:"fixed",top:80,left:"50%",pointerEvents:"none",zIndex:999,opacity:tv?1:0,transition:"opacity .25s",animation:tv?"toastIn .3s cubic-bezier(.4,0,.2,1) both":"none"}}>
         <div style={{background:"#16a34a",color:"#fff",borderRadius:24,padding:"10px 22px",fontWeight:700,fontSize:14,boxShadow:"0 4px 20px rgba(22,163,74,.45)",whiteSpace:"nowrap",transform:"translateX(-50%)"}}>{toast}</div>
       </div>
-      <Header sub={`${cand.name} ${cand.surname} · ${attempt} ${t.test.att}`}/>
+      {renderHeader(`${cand.name} ${cand.surname} · ${attempt} ${t.test.att}`)}
       {/* Compact timer — fixed at bottom so it's always visible while scrolling */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:95,pointerEvents:"none",padding:"8px 12px 12px",background:"linear-gradient(to top, rgba(249,250,251,.97) 65%, transparent)",display:"flex",justifyContent:"center"}}>
         <div style={{pointerEvents:"auto",display:"inline-flex",alignItems:"center",gap:10,background:timerLow?"#fef2f2":"#fff",border:`1px solid ${timerLow?"#fecaca":"#e5e7eb"}`,borderRadius:999,padding:"7px 14px",boxShadow:"0 2px 14px rgba(0,0,0,.1)",fontSize:12,fontWeight:600,color:"#6b7280"}}>
@@ -1029,7 +1043,7 @@ export default function App(){
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
         <style dangerouslySetInnerHTML={{__html:CSS}} />
-        <Header sub={t.res.title||"Result"}/>
+        {renderHeader(t.res.title||"Result")}
         <div style={{maxWidth:540,margin:"0 auto",padding:"28px 16px 48px"}}>
           <div className="card card-p-lg si" style={{boxShadow:"0 20px 40px rgba(0,0,0,.1)",textAlign:"center"}}>
             {/* Emoji */}
@@ -1084,7 +1098,7 @@ export default function App(){
   if(page==="login") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}} />
-      <Header sub={t.adm.sub}/>
+      {renderHeader(t.adm.sub)}
       <div style={{maxWidth:380,margin:"60px auto",padding:"0 16px"}}>
         <div className="card card-p-lg si" style={{textAlign:"center",boxShadow:"0 20px 40px rgba(0,0,0,.1)"}}>
           <div style={{width:72,height:72,borderRadius:20,background:"#f0fdf4",border:"2px solid #bbf7d0",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:34}}>🔐</div>
@@ -1104,7 +1118,7 @@ export default function App(){
   if(page==="admin") return(
     <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}} />
-      <Header sub={t.adm.title}/>
+      {renderHeader(t.adm.title)}
       <div style={{maxWidth:1000,margin:"0 auto",padding:"24px 16px 48px"}}>
         {/* Cloud status */}
         <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"#fff",borderRadius:10,padding:"6px 14px",marginBottom:20,fontSize:12.5,color:sbSt==="cloud"?"#16a34a":"#6b7280",border:"1.5px solid #e5e7eb",fontWeight:600}}>
@@ -1163,7 +1177,8 @@ export default function App(){
             <tbody>
               {fRes.length===0&&<tr><td colSpan={8} style={{textAlign:"center",padding:"52px",color:"#d1d5db",fontSize:15}}>{t.adm.none}</td></tr>}
               {fRes.map((r,i)=>{
-                const isCompleted = r.status==="completed";
+                // IQ/Personal are stored as status="passed" (Supabase CHECK constraint) but meta.no_pass_fail flags them as neutral.
+                const isCompleted = r.status==="completed" || r.meta?.no_pass_fail===true;
                 const cl=isCompleted?"#2563eb":r.status==="passed"?"#16a34a":r.status==="retry"?"#f59e0b":"#ef4444";
                 const lbl=isCompleted?L("Yakunlandi","Завершён","Completed"):r.status==="passed"?t.adm.pL:r.status==="retry"?t.adm.rL:t.adm.fL;
                 const cls=isCompleted?"bdg":r.status==="passed"?"bdg bdg-p":r.status==="retry"?"bdg bdg-r":"bdg bdg-f";
