@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
-import { QS_IQ, QS_PERSONAL, personalMaxPts, type IqQ, type SjtQ, type PersonalModule } from "../lib/newQuestions";
+import { QS_IQ, QS_PERSONAL, personalMaxPts, XISLAT_NAMES, RED_FLAG_IDS, type IqQ, type SjtQ, type PersonalModule, type Ml } from "../lib/newQuestions";
+import { evaluateIq, evaluatePersonal, combinedRecommendation, verdictLabel, EVAL_CONFIG, type Lang as EvalLang } from "../lib/evaluation";
 import AdminQuestions from "../components/AdminQuestions";
 import SectionFormModal from "../components/SectionFormModal";
 import QuestionFormModal from "../components/QuestionFormModal";
@@ -512,6 +513,9 @@ export default function App(){
   const[adminRefresh,setAdminRefresh]=useState(0);
   const[mistakesRow,setMistakesRow]=useState<any|null>(null);
   const[sectionFilt,setSectionFilt]=useState<string>("all");
+  // "Baholash" evaluation modal state — active row + admin-picked target role for IQ evaluation.
+  const[evalRow,setEvalRow]=useState<any|null>(null);
+  const[evalRole,setEvalRole]=useState<string>("Sotuvchi");
   const actx=useRef(null);const stopO=useRef(null);
 
   // After hydration, restore the user's saved language from localStorage.
@@ -644,7 +648,7 @@ export default function App(){
                               : selectedSection==="amocrm" ? "amoCRM bo'limi"
                               : selectedSection==="umumiy" ? "Umumiy test"
                               : selectedSection==="iq" ? "IQ test"
-                              : selectedSection==="personal" ? `Personal test — ${personalModule?.label||""}`
+                              : selectedSection==="personal" ? `Personal test — ${personalModule?.label?.uz||""}`
                               : "Alcana Jamoasi",
         total: curQs.length,
         max_score: isPersonal ? curQs.length*3 : curQs.length,
@@ -723,8 +727,8 @@ export default function App(){
     : selectedSection==="alcana" ? mapMlQs(QS_ALCANA)
     : selectedSection==="umumiy" ? mapMlQs([...QS_UMUMIY, ...QS_ALCANA])
     : selectedSection==="amocrm" ? mapMlQs(QS_AMOCRM)
-    : isIq ? QS_IQ.map(iq=>({q:uzText(iq.q),opts:iq.opts.map(uzText),ans:iq.ans,svg:iq.svg}))
-    : isPersonal ? personalModule!.qs.map(sq=>({q:uzText(sq.q),opts:sq.opts.map(o=>uzText(o.t)),__personal:true}))
+    : isIq ? QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}))
+    : isPersonal ? personalModule!.qs.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>pickMl(o.t)),__personal:true}))
     : (QS[lang] || QS.uz || []); // legacy fallback (only used if nothing picked yet); guard against missing lang keys (uz-cyrl)
   const qs:any[] = applyShuffles(qsRaw);
   const q=qs[cur];
@@ -748,7 +752,7 @@ export default function App(){
     : selectedSection==="amocrm" ? L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
     : isIq ? L("IQ test","IQ тест","IQ test")
-    : isPersonal ? `Personal — ${uzText(personalModule?.label||"")}`
+    : isPersonal ? `Personal — ${pickMl(personalModule?.label||{uz:"",ru:"",en:""})}`
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
   const timerM=Math.floor(timeLeft/60),timerS=timeLeft%60,timerLow=timeLeft<=60,timerDisp=`${timerM}:${timerS<10?"0"+timerS:timerS}`;
@@ -886,7 +890,7 @@ export default function App(){
                 <div style={{marginTop:10}} onClick={e=>e.stopPropagation()}>
                   <div style={{fontSize:11.5,fontWeight:700,color:"#6b7280",marginBottom:6,letterSpacing:".04em"}}>{L("MODULNI TANLANG","ВЫБЕРИТЕ МОДУЛЬ","PICK A MODULE")}</div>
                   <select value={personalMod} onChange={e=>setPersonalMod(e.target.value)} style={{width:"100%",padding:"10px 12px",borderRadius:10,border:"1.5px solid #e5e7eb",fontSize:14,fontFamily:"inherit",background:"#fff",color:"#111827",fontWeight:600,cursor:"pointer",outline:"none"}}>
-                    {QS_PERSONAL.map(m=><option key={m.key} value={m.key}>{uzText(m.label)}</option>)}
+                    {QS_PERSONAL.map(m=><option key={m.key} value={m.key}>{pickMl(m.label)}</option>)}
                   </select>
                   <div style={{fontSize:12,color:"#6b7280",marginTop:8}}>{(QS_PERSONAL.find(m=>m.key===personalMod)?.qs.length||0)} {L("savol","вопросов","questions")} · 15 {L("daqiqa","минут","min")}</div>
                 </div>
@@ -1139,7 +1143,7 @@ export default function App(){
             <option value="umumiy">📚 Umumiy test</option>
             <option value="iq">🧠 IQ test</option>
             <option value="personal">🎯 Personal test</option>
-            {QS_PERSONAL.map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — {m.label}</option>)}
+            {QS_PERSONAL.map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — {pickMl(m.label)}</option>)}
             {dbSections.map(s=><option key={s.id} value={`db:${s.id}`}>📚 {s.title_uz}</option>)}
           </select>
           <input type="search" value={srch} onChange={e=>setSrch(e.target.value)} placeholder={t.adm.search}
@@ -1173,11 +1177,17 @@ export default function App(){
                     <td><span className={cls} style={isCompleted?{background:"#dbeafe",color:"#1e40af",border:"1.5px solid rgba(37,99,235,.3)"}:undefined}>{lbl}</span></td>
                     <td style={{color:"#9ca3af",fontSize:12.5}}>{r.created_at?new Date(r.created_at).toLocaleDateString():r.date||""}</td>
                     <td style={{textAlign:"center"}}>
-                      {r.meta?.answers ? (
-                        <button onClick={()=>setMistakesRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12}}>👁 {L("Tafsilot","Детали","Details")}</button>
-                      ) : (
-                        <span style={{color:"#d1d5db",fontSize:11}}>—</span>
-                      )}
+                      {(() => {
+                        const sk = r.meta?.section_key || "";
+                        const isEval = sk==="iq" || sk==="personal" || sk.startsWith("personal:");
+                        return (
+                          <div style={{display:"flex",gap:4,justifyContent:"center",flexWrap:"wrap"}}>
+                            {r.meta?.answers && <button onClick={()=>setMistakesRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12}}>👁 {L("Tafsilot","Детали","Details")}</button>}
+                            {isEval && <button onClick={()=>setEvalRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12,background:"#f0fdf4",color:"#166534",borderColor:"#bbf7d0"}}>🎯 {L("Baholash","Оценка","Evaluate")}</button>}
+                            {!r.meta?.answers && !isEval && <span style={{color:"#d1d5db",fontSize:11}}>—</span>}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 );
@@ -1227,6 +1237,145 @@ export default function App(){
             onSaved={() => { setEditingQuestion(null); setAdminRefresh(v=>v+1); }}
           />
         )}
+        {evalRow && (()=>{
+          const m = evalRow.meta || {};
+          const sk = m.section_key || "";
+          const isIqEval = sk === "iq";
+          const isPersonalEval = sk === "personal" || sk.startsWith("personal:");
+          const iqRes = isIqEval ? evaluateIq(m) : null;
+          const pRes = isPersonalEval ? evaluatePersonal(m) : null;
+          const rec = combinedRecommendation(iqRes, pRes, isIqEval ? evalRole : null);
+          const langE = lang as EvalLang;
+          const recTxt = pickMl(rec.reason);
+          const verdictTxt = lang==="uz-cyrl" ? toCyrl(verdictLabel(rec.verdict,"uz")) : verdictLabel(rec.verdict, langE);
+          const recBg = rec.color==="green" ? "#f0fdf4" : rec.color==="yellow" ? "#fefce8" : "#fef2f2";
+          const recBd = rec.color==="green" ? "#86efac" : rec.color==="yellow" ? "#fde68a" : "#fecaca";
+          const recFg = rec.color==="green" ? "#166534" : rec.color==="yellow" ? "#92400e" : "#991b1b";
+          const recIcon = rec.color==="green" ? "🟢" : rec.color==="yellow" ? "🟡" : "🔴";
+          const blokLabel: Record<string,Ml> = {
+            mantiq:  {uz:"Mantiq",ru:"Логика",en:"Logic"},
+            sonli:   {uz:"Sonli",ru:"Счёт",en:"Numeric"},
+            fazoviy: {uz:"Fazoviy",ru:"Простр.",en:"Spatial"},
+            diqqat:  {uz:"Diqqat",ru:"Внимание",en:"Attention"},
+          };
+          return (
+            <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.55)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setEvalRow(null)}>
+              <div className="card" style={{maxWidth:640,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:24}} onClick={e=>e.stopPropagation()}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:12,flexWrap:"wrap"}}>
+                  <h3 style={{fontSize:18,fontWeight:800,color:"#111827"}}>
+                    🎯 {L("Baholash","Оценка","Evaluation")} — {evalRow.name} {evalRow.surname}
+                  </h3>
+                  <button className="btn btn-s" onClick={()=>setEvalRow(null)} style={{padding:"6px 12px",fontSize:12.5}}>✕</button>
+                </div>
+                <div style={{fontSize:12,color:"#9ca3af",marginBottom:16}}>{m.section_label||sk}</div>
+
+                {/* Verdict banner */}
+                <div style={{background:recBg,border:`2px solid ${recBd}`,borderRadius:12,padding:"16px 18px",marginBottom:20,textAlign:"center"}}>
+                  <div style={{fontSize:32,marginBottom:6}}>{recIcon}</div>
+                  <div style={{fontSize:18,fontWeight:900,color:recFg,letterSpacing:"-.01em",marginBottom:6}}>{verdictTxt}</div>
+                  <div style={{fontSize:13.5,color:recFg,lineHeight:1.5}}>{recTxt}</div>
+                </div>
+
+                {/* IQ block */}
+                {iqRes && (
+                  <div style={{marginBottom:20}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#111827",marginBottom:10,letterSpacing:".02em"}}>🧠 {L("Aqliy salohiyat","Умственный потенциал","Cognitive")}</div>
+                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5,marginBottom:8}}>
+                        <span style={{color:"#6b7280"}}>{L("Umumiy ball","Общий балл","Overall")}</span>
+                        <span style={{fontWeight:800,color:iqRes.taqiq?"#991b1b":"#111827"}}>{iqRes.togri}/{iqRes.jami} ({iqRes.umumiyPct}%) — {iqRes.umumiyBand}</span>
+                      </div>
+                      {(["mantiq","sonli","fazoviy","diqqat"] as const).map(bk=>{
+                        const b = iqRes.bloklarRaw[bk]; const pct = Math.round(iqRes.bloklar[bk]);
+                        return (
+                          <div key={bk} style={{marginBottom:6}}>
+                            <div style={{display:"flex",justifyContent:"space-between",fontSize:12.5,color:"#374151",marginBottom:3}}>
+                              <span>{pickMl(blokLabel[bk])}</span><span style={{fontWeight:700}}>{b.togri}/{b.jami} ({pct}%)</span>
+                            </div>
+                            <div className="prog" style={{height:6}}><div className="prog-f" style={{width:`${pct}%`}}/></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Role fit */}
+                    <div style={{marginBottom:8,fontSize:12.5,fontWeight:700,color:"#374151"}}>{L("Lavozimga moslik","Совместимость с ролью","Role fit")}:</div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:12}}>
+                      {Object.entries(iqRes.rollar).map(([rol,v])=>{
+                        const bg = v.holat==="MOS"?"#dcfce7":v.holat==="CHEGARA"?"#fef9c3":"#fee2e2";
+                        const fg = v.holat==="MOS"?"#166534":v.holat==="CHEGARA"?"#92400e":"#991b1b";
+                        return(
+                          <div key={rol} style={{background:bg,color:fg,padding:"10px 12px",borderRadius:8,textAlign:"center"}}>
+                            <div style={{fontSize:12,fontWeight:700,opacity:.85}}>{rol}</div>
+                            <div style={{fontSize:20,fontWeight:900,letterSpacing:"-.02em"}}>{v.ball}</div>
+                            <div style={{fontSize:11,fontWeight:700}}>{v.holat}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Target role picker */}
+                    <div style={{padding:12,background:"#f0fdf4",borderRadius:10,border:"1px solid #bbf7d0"}}>
+                      <div style={{fontSize:12,fontWeight:700,color:"#166534",marginBottom:6,letterSpacing:".03em"}}>{L("MOʻLJALDAGI LAVOZIM (verdikt shu asosda beriladi)","ЦЕЛЕВАЯ РОЛЬ (вердикт по ней)","TARGET ROLE (verdict is per this)")}</div>
+                      <select value={evalRole} onChange={e=>setEvalRole(e.target.value)} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:"1.5px solid #e5e7eb",fontSize:13.5,fontFamily:"inherit",background:"#fff",color:"#111827",fontWeight:600,cursor:"pointer"}}>
+                        {Object.keys(EVAL_CONFIG.iq.roles).map(r=><option key={r} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Personal block */}
+                {pRes && (
+                  <div style={{marginBottom:20}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#111827",marginBottom:10,letterSpacing:".02em"}}>🎯 {L("Farosat / ishga salohiyat","Ситуационная сообразительность","Judgment / work aptitude")}</div>
+                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
+                      {pRes.modulKey === "core" ? (
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5}}>
+                          <span style={{color:"#6b7280"}}>{L("O'zak (Umumiy)","Ядро (общее)","Core")}</span>
+                          <span style={{fontWeight:800,color:pRes.coreBand==="Kuchli"?"#166534":pRes.coreBand==="O'rtacha"?"#92400e":"#991b1b"}}>{pRes.coreScore}/30 — {pRes.coreBand}</span>
+                        </div>
+                      ) : (
+                        <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5}}>
+                          <span style={{color:"#6b7280"}}>{L("Modul","Модуль","Module")} — {pickMl(pRes.modulLabel)}</span>
+                          <span style={{fontWeight:800,color:pRes.modulBand==="Kuchli"?"#166534":pRes.modulBand==="O'rtacha"?"#92400e":"#991b1b"}}>{pRes.modulScore}/18 — {pRes.modulBand}</span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Trait profile */}
+                    {Object.keys(pRes.xislatlar).length>0 && (
+                      <div style={{marginBottom:12}}>
+                        <div style={{fontSize:12.5,fontWeight:700,color:"#374151",marginBottom:8}}>{L("Xislat profili","Профиль черт","Trait profile")}:</div>
+                        {Object.entries(pRes.xislatlar).sort((a,b)=>b[1].pct-a[1].pct).map(([k,v])=>(
+                          <div key={k} style={{marginBottom:6}}>
+                            <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#374151",marginBottom:3}}>
+                              <span>{pickMl(v.label)}</span><span style={{fontWeight:700}}>{v.pct}%</span>
+                            </div>
+                            <div className="prog" style={{height:5}}><div className="prog-f" style={{width:`${v.pct}%`,background:v.pct>=66?"linear-gradient(90deg,#16a34a,#10b981)":v.pct>=40?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)"}}/></div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Red flags */}
+                    {pRes.redFlags.length>0 ? (
+                      <div style={{padding:12,background:"#fef2f2",border:"1.5px solid #fecaca",borderRadius:10}}>
+                        <div style={{fontSize:12.5,fontWeight:800,color:"#991b1b",marginBottom:8}}>🚩 {L("Qizil bayroq (ishonch masalasi)","Красный флаг (вопрос доверия)","Red flag (trust concern)")}:</div>
+                        {pRes.redFlags.map(rf=>(
+                          <div key={rf.id} style={{fontSize:12.5,color:"#991b1b",marginBottom:4,lineHeight:1.5}}>
+                            <b>{rf.id}:</b> {pickMl(rf.q)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{fontSize:12.5,color:"#166534",background:"#f0fdf4",padding:"8px 12px",borderRadius:8,border:"1px solid #bbf7d0"}}>✓ {L("Qizil bayroq yo'q","Красных флагов нет","No red flags")}</div>
+                    )}
+                  </div>
+                )}
+
+                <div style={{fontSize:11,color:"#9ca3af",lineHeight:1.6,padding:"10px 12px",background:"#f9fafb",borderRadius:8,border:"1px solid #f3f4f6"}}>
+                  ℹ️ {L("Chegara raqamlari boshlang'ich standart. Real 5-10 xodim testni yechgach kalibrovka qilinadi.","Пороговые значения — стартовые. После прохождения 5-10 реальными сотрудниками откалибруются.","Threshold numbers are initial defaults. Calibrate once 5-10 real employees have taken the test.")}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
         {mistakesRow && (()=>{
           const m = mistakesRow.meta || {};
           const ans = m.answers || {};
@@ -1238,11 +1387,11 @@ export default function App(){
           if(skey==="alcana"){questionsSrc=mapMlQs(QS_ALCANA);sourceLabel=m.section_label||"Alcana";}
           else if(skey==="umumiy"){questionsSrc=mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);sourceLabel=m.section_label||"Umumiy";}
           else if(skey==="amocrm"){questionsSrc=mapMlQs(QS_AMOCRM);sourceLabel=m.section_label||"amoCRM";}
-          else if(skey==="iq"){questionsSrc=QS_IQ.map(iq=>({q:iq.q,opts:[...iq.opts],ans:iq.ans,svg:iq.svg}));sourceLabel=m.section_label||"IQ test";}
+          else if(skey==="iq"){questionsSrc=QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}));sourceLabel=m.section_label||"IQ test";}
           else if(skey.startsWith("personal:")){
             const modKey = skey.slice("personal:".length);
             const mod = QS_PERSONAL.find(mm=>mm.key===modKey);
-            if(mod){questionsSrc=mod.qs.map(sq=>({q:sq.q,opts:sq.opts.map(o=>({t:o.t,pts:o.pts})),__personal:true}));sourceLabel=m.section_label||`Personal — ${mod.label}`;}
+            if(mod){questionsSrc=mod.qs.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>({t:pickMl(o.t),pts:o.pts})),svg:undefined,__personal:true}));sourceLabel=m.section_label||`Personal — ${pickMl(mod.label)}`;}
           }
           // Replay the shuffle so admin sees the exact option order the user faced.
           if(m.shuffles&&Array.isArray(m.shuffles)&&m.shuffles.length===questionsSrc.length){
