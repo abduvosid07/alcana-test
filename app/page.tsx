@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
 import { QS_IQ, QS_PERSONAL, personalMaxPts, XISLAT_NAMES, RED_FLAG_IDS, type IqQ, type SjtQ, type PersonalModule, type Ml } from "../lib/newQuestions";
 import { evaluateIq, evaluatePersonal, combinedRecommendation, verdictLabel, EVAL_CONFIG, type Lang as EvalLang } from "../lib/evaluation";
+import { PERSONALITY_DATA, baholashShaxsiyat, type PersonalityResult } from "../lib/personalityScoring";
 import AdminQuestions from "../components/AdminQuestions";
 import SectionFormModal from "../components/SectionFormModal";
 import QuestionFormModal from "../components/QuestionFormModal";
@@ -510,8 +511,8 @@ export default function App(){
   const[sbSt,setSbSt]=useState("local");
   const[langOpen,setLangOpen]=useState(false);
   const[catS,setCatS]=useState({});
-  // Picked test section. Can be a hardcoded id ("alcana" | "amocrm" | "umumiy" | "iq" | "personal") or a DbSection from admin.
-  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|"iq"|"personal"|DbSection|null>(null);
+  // Picked test section. Hardcoded id ("alcana" | "amocrm" | "umumiy" | "iq" | "personal" (SJT, renamed to Farosat in the UI) | "personality" (MBTI-style)) or a DbSection from admin.
+  const[selectedSection,setSelectedSection]=useState<"alcana"|"amocrm"|"umumiy"|"iq"|"personal"|"personality"|DbSection|null>(null);
   // For the "personal" test — which POSITION module runs alongside the mandatory core (Umumiy).
   // Every candidate solves core (10 SJT questions) + the picked position module (6 questions) = 16 total.
   // "core" is no longer selectable on its own — position modules only.
@@ -558,22 +559,30 @@ export default function App(){
     else if(sel==="amocrm") raw = QS_AMOCRM;
     else if(sel==="iq") raw = QS_IQ;
     else if(sel==="personal"){
-      // Personal test = mandatory core (Umumiy, 10 qs) + picked position module (6 qs). Total 16.
+      // Farosat test (SJT) = mandatory core (Umumiy, 10 qs) + picked position module (6 qs). Total 16.
       const core = QS_PERSONAL.find(m=>m.key==="core");
       const mod  = QS_PERSONAL.find(m=>m.key===personalMod);
       const modResolved = (mod && mod.key!=="core") ? mod : QS_PERSONAL.find(m=>m.key!=="core")!;
       raw = [...(core?.qs||[]), ...modResolved.qs];
     }
+    else if(sel==="personality"){
+      // Personality (shaxsiyat) test: 60 Likert items. Opts stay in fixed order (shuffling would
+      // reverse the agree/disagree axis — kept untouched; the Fisher-Yates below is a no-op per
+      // item because we pass identity permutations.
+      raw = PERSONALITY_DATA.items.map(it=>({opts:[0,1,2,3,4,5,6], __likert:true}));
+    }
     // Fisher-Yates: build a shuffled permutation of option indices for every question.
     const newShuffles:number[][] = raw.map((q:any)=>{
       const n = (q.opts||[]).length || 4;
       const arr = Array.from({length:n},(_,i)=>i);
+      // Likert scale options must NOT be shuffled — their order (0=agree..6=disagree) is semantic.
+      if(q.__likert) return arr;
       for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
       return arr;
     });
     setShuffles(newShuffles);
-    // Timer: 40 min for the long "Umumiy", 20 min for IQ, 15 min for Personal, 15 min for the rest.
-    const durSec = sel==="umumiy" ? 40*60 : sel==="iq" ? 20*60 : sel==="personal" ? 15*60 : 15*60;
+    // Timer: 40 min for the long "Umumiy", 20 min for IQ/Personality, 15 min for Farosat and the rest.
+    const durSec = sel==="umumiy" ? 40*60 : sel==="iq" ? 20*60 : sel==="personality" ? 20*60 : sel==="personal" ? 15*60 : 15*60;
     setTimeLeft(durSec);
     setCand({name,surname});setAnswers({});setCur(0);setScore(null);
     nav(()=>setPage("test"));
@@ -590,7 +599,8 @@ export default function App(){
     // for the render, but we re-derive here because closures can drift mid-quiz.
     const curDb = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
     const isIq = selectedSection==="iq";
-    const isPersonal = selectedSection==="personal";
+    const isPersonal = selectedSection==="personal";       // Farosat (SJT) — legacy key kept for existing DB rows
+    const isPersonality = selectedSection==="personality"; // Shaxsiyat (MBTI-style)
     const personalCoreMod = isPersonal ? QS_PERSONAL.find(m=>m.key==="core") : null;
     const personalPosMod = isPersonal
       ? (QS_PERSONAL.find(m=>m.key===personalMod && m.key!=="core") || QS_PERSONAL.find(m=>m.key!=="core")!)
@@ -603,11 +613,13 @@ export default function App(){
       : selectedSection==="amocrm" ? QS_AMOCRM
       : isIq ? QS_IQ
       : isPersonal ? [...(personalCoreMod?.qs||[]), ...(personalPosMod?.qs||[])]
+      : isPersonality ? PERSONALITY_DATA.items.map(it=>({itemId:it.id, opts:[0,1,2,3,4,5,6]}))
       : (QS[lang] || QS.uz || []);
     // Apply shuffles so the stored answer indices line up with what the user actually saw.
     const curQs:any[] = (shuffles.length===curQsRaw.length)
       ? curQsRaw.map((q:any,i:number)=>{
           const sh=shuffles[i];if(!sh||!q.opts||sh.length!==q.opts.length)return q;
+          if(isPersonality) return q; // Likert stays in order; shuffles are identity perms
           if(isPersonal){
             // Personal: options have pts. Rebuild opts array in the shuffled order so pts stay aligned.
             const shuffledOpts = sh.map((idx:number)=>q.opts[idx]);
@@ -617,7 +629,20 @@ export default function App(){
         })
       : curQsRaw;
     let s=0;const ck=["company","values","hr","conduct","innovation"];const cs:any={};ck.forEach(k=>cs[k]=0);
-    if(isPersonal){
+    // Personality result (set only for shaxsiyat test).
+    let personalityResult:any = null;
+    if(isPersonality){
+      // Build {itemId: pickedIdx 0..6} map, then score it.
+      const javoblar:Record<string,number> = {};
+      PERSONALITY_DATA.items.forEach((it,i)=>{
+        const picked = answers[i];
+        if(picked!==undefined && picked>=0 && picked<=6) javoblar[it.id] = picked;
+      });
+      try{
+        personalityResult = baholashShaxsiyat(javoblar);
+        s = personalityResult.javobSoni; // store number of answered items in the `score` column
+      }catch(e){console.error("personality scoring:",e);}
+    } else if(isPersonal){
       // SJT: score = sum of pts for the picked option in each question.
       curQs.forEach((q:any,i:number)=>{
         const picked = answers[i];
@@ -628,7 +653,7 @@ export default function App(){
     } else {
       curQs.forEach((q:any,i:number)=>{if(answers[i]===q.ans){s++;cs[ck[Math.min(Math.floor(i/6),4)]]++;}});
     }
-    setScore(s);setCatS(isPersonal||isIq?{}:cs);
+    setScore(s);setCatS(isPersonal||isIq||isPersonality?{}:cs);
     // IQ / Personal: no pass/fail thresholds yet — everything counts as "completed".
     const pT = curDb ? curDb.pass_threshold
              : selectedSection==="alcana" ? 43
@@ -636,6 +661,7 @@ export default function App(){
              : selectedSection==="amocrm" ? 26
              : isIq ? 999
              : isPersonal ? 9999
+             : isPersonality ? 9999
              : 27;
     const rT = curDb ? curDb.retry_threshold
              : selectedSection==="alcana" ? 35
@@ -643,6 +669,7 @@ export default function App(){
              : selectedSection==="amocrm" ? 21
              : isIq ? 0
              : isPersonal ? 0
+             : isPersonality ? 0
              : 20;
     const sectionKey:string = curDb ? `db:${curDb.id}`
              : selectedSection==="alcana" ? "alcana"
@@ -650,12 +677,13 @@ export default function App(){
              : selectedSection==="amocrm" ? "amocrm"
              : isIq ? "iq"
              : isPersonal ? `personal:${personalMod}`
+             : isPersonality ? "personality"
              : "legacy";
     // Timer expiry always counts as failed regardless of score.
-    // IQ/Personal have no pass/fail — Supabase CHECK constraint only allows passed|retry|failed,
-    // so we store them as "passed" and flag meta.no_pass_fail=true; the admin UI reads that flag
-    // to render a neutral "Yakunlandi" badge instead of a green pass.
-    const status = (isIq || isPersonal) ? "passed"
+    // IQ/Farosat/Personality have no pass/fail — Supabase CHECK constraint only allows
+    // passed|retry|failed, so we store them as "passed" and flag meta.no_pass_fail=true;
+    // the admin UI reads that flag to render a neutral "Yakunlandi" badge instead of a green pass.
+    const status = (isIq || isPersonal || isPersonality) ? "passed"
                   : timedOut ? "failed"
                   : s>=pT ? "passed"
                   : (s>=rT && attempt===1 ? "retry" : "failed");
@@ -670,17 +698,20 @@ export default function App(){
       meta: {
         lang,
         cats: cs,
-        no_pass_fail: isIq || isPersonal,
+        no_pass_fail: isIq || isPersonal || isPersonality,
         section_id: curDb?.id || null,
         section_key: sectionKey,
         section_label: curDb ? curDb.title_uz
                               : selectedSection==="amocrm" ? "amoCRM bo'limi"
                               : selectedSection==="umumiy" ? "Umumiy test"
                               : selectedSection==="iq" ? "IQ test"
-                              : selectedSection==="personal" ? `Personal test — Umumiy + ${personalPosMod?.label?.uz||""}`
+                              : selectedSection==="personal" ? `Farosat test — Umumiy + ${personalPosMod?.label?.uz||""}`
+                              : selectedSection==="personality" ? `Personal test${personalityResult?` — ${personalityResult.kod}`:""}`
                               : "Alcana Jamoasi",
+        // Personality: full scoring result (code, scales, type) persisted for admin.
+        personality: personalityResult || undefined,
         total: curQs.length,
-        max_score: isPersonal ? curQs.length*3 : curQs.length,
+        max_score: isPersonal ? curQs.length*3 : isPersonality ? 60 : curQs.length,
         // Personal test structure: first `personalCoreLen` questions are core (Umumiy),
         // the rest are the picked position module. Evaluation splits scores here.
         personal_core_len: isPersonal ? personalCoreLen : undefined,
@@ -703,7 +734,7 @@ export default function App(){
   const retryTest=()=>{
     // Regenerate shuffles + reset timer for the second attempt.
     setShuffles(prev=>prev.map(sh=>{const a=[...sh];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}));
-    const durSec = selectedSection==="umumiy" ? 40*60 : selectedSection==="iq" ? 20*60 : 15*60;
+    const durSec = selectedSection==="umumiy" ? 40*60 : selectedSection==="iq" ? 20*60 : selectedSection==="personality" ? 20*60 : 15*60;
     setTimeLeft(durSec);
     setAttempt(2);setAnswers({});setCur(0);setScore(null);nav(()=>setPage("test"));
   };
@@ -746,8 +777,9 @@ export default function App(){
   // Derive the active question list + thresholds from selectedSection.
   const dbSec = (selectedSection && typeof selectedSection==="object") ? selectedSection : null;
   const isIq = selectedSection==="iq";
-  const isPersonal = selectedSection==="personal";
-  // Personal test: mandatory core (Umumiy) + one position module.
+  const isPersonal = selectedSection==="personal";         // Farosat (SJT)
+  const isPersonality = selectedSection==="personality";   // Shaxsiyat (MBTI-style)
+  // Farosat test: mandatory core (Umumiy) + one position module.
   const personalCoreModule = isPersonal ? QS_PERSONAL.find(m=>m.key==="core") : null;
   const personalPosModule = isPersonal
     ? (QS_PERSONAL.find(m=>m.key===personalMod && m.key!=="core") || QS_PERSONAL.find(m=>m.key!=="core")!)
@@ -768,6 +800,15 @@ export default function App(){
     if(isPersonal){
       const combined = [...(personalCoreModule?.qs||[]), ...(personalPosModule?.qs||[])];
       return combined.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>pickMl(o.t)),__personal:true}));
+    }
+    if(isPersonality){
+      // Likert items: 7 radio dots between "agree" and "disagree" endpoints. Options are not labelled
+      // individually — only the question text matters here.
+      return PERSONALITY_DATA.items.map(it=>({
+        q: lang==="uz-cyrl" ? toCyrl(it.text.uz) : (lang==="ru" ? it.text.ru : lang==="en" ? it.text.en : it.text.uz),
+        opts: ["","","","","","",""],
+        __likert: true,
+      }));
     }
     return (QS[lang] || QS.uz || []);
   }, [selectedSection, personalMod, lang, dbSec]);
@@ -793,7 +834,8 @@ export default function App(){
     : selectedSection==="amocrm" ? L("amoCRM bo'limi","Раздел amoCRM","amoCRM section")
     : selectedSection==="umumiy" ? L("Umumiy test","Общий тест","General test")
     : isIq ? L("IQ test","IQ тест","IQ test")
-    : isPersonal ? `Personal — Umumiy + ${pickMl(personalPosModule?.label||{uz:"",ru:"",en:""})}`
+    : isPersonal ? `Farosat — Umumiy + ${pickMl(personalPosModule?.label||{uz:"",ru:"",en:""})}`
+    : isPersonality ? L("Personal test — Shaxsiyat","Personal — Личностный","Personal test — Personality")
     : L("Alcana Jamoasi","Команда Alcana","Alcana Team");
   const answered=Object.keys(answers).length;
   const timerM=Math.floor(timeLeft/60),timerS=timeLeft%60,timerLow=timeLeft<=60,timerDisp=`${timerM}:${timerS<10?"0"+timerS:timerS}`;
@@ -803,6 +845,7 @@ export default function App(){
     if(sectionFilt==="all")return true;
     const sk = r.meta?.section_key||"";
     if(sectionFilt==="personal") return sk==="personal" || sk.startsWith("personal:");
+    if(sectionFilt==="personality") return sk==="personality";
     return sk===sectionFilt;
   });
   // Exclude no_pass_fail rows (IQ/Personal) from pass/retry/fail buckets — they're stored as "passed" for schema compatibility but aren't a pass.
@@ -934,7 +977,7 @@ export default function App(){
             <div className="card pickcard au" style={{textAlign:"left",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"480ms",cursor:"pointer"}} onClick={()=>setSelectedSection("personal")}>
               <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                 <span style={{fontSize:26}}>🎯</span>
-                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Personal test</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Farosat test</span>
               </div>
               <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Farosat va ishga salohiyat — vaziyat testi. Umumiy qism har lavozim uchun majburiy, plus tanlangan lavozim moduli.","Ситуационный тест — здравомыслие и мотивация к работе. Общая часть обязательна для всех, плюс модуль выбранной должности.","Situational judgment — practical wisdom & work aptitude. Core (Umumiy) is mandatory for every position, plus the picked position's module.")}</div>
               {isSel && (()=>{
@@ -956,6 +999,17 @@ export default function App(){
                 );
               })()}
             </div>
+          );})()}
+          {/* Hardcoded section 6: Personality (shaxsiyat) test — MBTI-style, 60 Likert items */}
+          {(()=>{const isSel=selectedSection==="personality";return(
+            <button onClick={()=>setSelectedSection("personality")} className="card pickcard au" style={{textAlign:"left",cursor:"pointer",padding:20,border:isSel?"2px solid #16a34a":"1.5px solid #e5e7eb",background:isSel?"#f0fdf4":"#fff",fontFamily:"inherit",transition:"all 250ms cubic-bezier(.4,0,.2,1)",animationDelay:"600ms"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+                <span style={{fontSize:26}}>🧬</span>
+                <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>Personal test</span>
+              </div>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Shaxsiyat testi — uslubingizni aniqlaydi (masalan INFJ-A). Ishga olish qarori uchun emas, hamkorlik uchun.","Личностный тест — определяет ваш стиль (напр. INFJ-A). Не для найма — для понимания и сотрудничества.","Personality test — identifies your style (e.g. INFJ-A). Not for hiring decisions — for collaboration insight.")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>60 {L("fikr","утверждений","statements")} · 20 {L("daqiqa","минут","min")}</div>
+            </button>
           );})()}
           {/* DB-added sections (managed via admin) */}
           {dbSections.map(s=>{
@@ -1031,11 +1085,43 @@ export default function App(){
           {q.svg && (
             <div style={{marginBottom:20,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,padding:8,overflow:"hidden"}} dangerouslySetInnerHTML={{__html:q.svg}} />
           )}
-          {q.opts.map((opt,oi)=>{
+          {q.__likert ? (() => {
+            // Likert row: 7 clickable circles between "Agree" (left) and "Disagree" (right).
+            // Scores 0..6; 0 = fully agree, 3 = neutral, 6 = fully disagree.
+            const picked = answers[cur];
+            // Circle size scales down from the extremes toward the middle.
+            const sizeAt = (i:number) => [56,46,36,30,36,46,56][i];
+            const colorAt = (i:number) => i<3 ? "#16a34a" : i===3 ? "#9ca3af" : "#ef4444";
+            return (
+              <div style={{marginTop:4,marginBottom:12}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13,fontWeight:700,color:"#374151",marginBottom:12,padding:"0 8px"}}>
+                  <span style={{color:"#16a34a"}}>{L("Roziman","Согласен","Agree")}</span>
+                  <span style={{color:"#ef4444"}}>{L("Rozi emasman","Не согласен","Disagree")}</span>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,padding:"6px 4px"}}>
+                  {q.opts.map((_:any,oi:number)=>{
+                    const sel = picked===oi;
+                    const sz = sizeAt(oi); const c = colorAt(oi);
+                    return (
+                      <button key={oi} onClick={()=>selAns(oi)} aria-label={`${oi}`} style={{
+                        width:sz,height:sz,borderRadius:"50%",cursor:"pointer",flexShrink:0,
+                        border:`3px solid ${c}`,
+                        background: sel ? c : "transparent",
+                        transition:"all .15s cubic-bezier(.4,0,.2,1)",
+                        boxShadow: sel ? `0 4px 14px ${c}66` : "none",
+                        transform: sel ? "scale(1.08)" : "scale(1)",
+                        padding:0,
+                      }}/>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })() : q.opts.map((opt,oi)=>{
             const sel=answers[cur]===oi;
             return(
               <button key={oi} className={`opt${sel?" sel":""}`} onClick={()=>selAns(oi)}>
-                <span className="opt-lbl">{"ABCD"[oi]}</span>
+                <span className="opt-lbl">{"ABCDEFG"[oi]}</span>
                 <span style={{flex:1}}>{opt}</span>
                 {sel&&<span className="chk">✅</span>}
               </button>
@@ -1078,17 +1164,26 @@ export default function App(){
   // ─────────────────────────────────────────
   if(page==="result"){
     const s=score??0;
-    const isNoPassFail = isIq || isPersonal;
+    const isNoPassFail = isIq || isPersonal || isPersonality;
     const isPassed=!isNoPassFail && s>=passT;
     const isRetry=!isNoPassFail && s>=retryT && s<passT && attempt===1;
     const isFailed=!isNoPassFail && !isPassed && !isRetry;
     const cl=isNoPassFail?"#16a34a":isPassed?"#16a34a":isRetry?"#f59e0b":"#ef4444";
-    // For personal: max = sum of best pts (3 per question). For IQ: max = totalQ.
-    // Personal max = core (10*3=30) + module (6*3=18) = 48. Fallback to totalQ*3 if lookup failed.
+    // Score max: Farosat = 48 (30 core + 18 module); IQ/DB = totalQ; Personality = 60 (items answered).
     const scoreMax = isPersonal
       ? ((personalCoreModule?personalMaxPts(personalCoreModule):0) + (personalPosModule?personalMaxPts(personalPosModule):0)) || totalQ*3
+      : isPersonality ? 60
       : totalQ;
     const circ=2*Math.PI*62,dash=(s/(scoreMax||1))*circ;
+    // For personality, recompute code from current answers (score() store doesn't carry the object).
+    const personalityOut:PersonalityResult|null = isPersonality ? (()=>{
+      try{
+        const javoblar:Record<string,number> = {};
+        PERSONALITY_DATA.items.forEach((it,i)=>{const v=answers[i]; if(v!==undefined && v>=0 && v<=6) javoblar[it.id]=v;});
+        return baholashShaxsiyat(javoblar);
+      }catch(e){return null;}
+    })() : null;
+    const typeInfo = personalityOut ? PERSONALITY_DATA.types[personalityOut.tip] : null;
     return(
       <div style={{minHeight:"100vh",background:"#f9fafb",fontFamily:"'Inter',system-ui,sans-serif"}}>
         <style dangerouslySetInnerHTML={CSS_INNER} />
@@ -1096,18 +1191,47 @@ export default function App(){
         <div style={{maxWidth:540,margin:"0 auto",padding:"28px 16px 48px"}}>
           <div className="card card-p-lg si" style={{boxShadow:"0 20px 40px rgba(0,0,0,.1)",textAlign:"center"}}>
             {/* Emoji */}
-            <div style={{fontSize:64,marginBottom:12,display:"inline-block",animation:(isPassed||isNoPassFail)?"bounceIn .7s cubic-bezier(.175,.885,.32,1.275) both":"float 3s ease-in-out infinite"}}>{isNoPassFail?"✅":isPassed?"🏆":isRetry?"💪":"😔"}</div>
+            <div style={{fontSize:64,marginBottom:12,display:"inline-block",animation:(isPassed||isNoPassFail)?"bounceIn .7s cubic-bezier(.175,.885,.32,1.275) both":"float 3s ease-in-out infinite"}}>{isPersonality?"🧬":isNoPassFail?"✅":isPassed?"🏆":isRetry?"💪":"😔"}</div>
             <h2 style={{fontSize:24,fontWeight:900,color:cl,marginBottom:4,letterSpacing:"-.02em"}}>{isNoPassFail?L("Test yakunlandi","Тест завершён","Test completed"):isPassed?t.res.cong:isRetry?t.res.again:t.res.sorry}</h2>
             <p style={{color:"#6b7280",fontSize:14.5,marginBottom:24,fontWeight:500}}>{cand.name} {cand.surname}</p>
-            {/* Score ring */}
-            <svg width="168" height="168" viewBox="0 0 168 168" style={{display:"block",margin:"0 auto 24px"}}>
-              <circle cx="84" cy="84" r="62" fill="none" stroke="#f3f4f6" strokeWidth="13"/>
-              <circle cx="84" cy="84" r="62" fill="none" stroke={cl} strokeWidth="13" strokeLinecap="round"
-                strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 84 84)"
-                style={{transition:"stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)",filter:`drop-shadow(0 0 6px ${cl}66)`}}/>
-              <text x="84" y="79" textAnchor="middle" fill={cl} fontSize="30" fontWeight="900" fontFamily="Inter,sans-serif">{s}</text>
-              <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ {scoreMax}</text>
-            </svg>
+            {/* Personality: big code + type name */}
+            {isPersonality && personalityOut && (
+              <div style={{marginBottom:24}}>
+                <div style={{fontSize:48,fontWeight:900,color:"#16a34a",letterSpacing:"-.04em",lineHeight:1}}>{personalityOut.kod}</div>
+                {typeInfo && <div style={{fontSize:18,fontWeight:800,color:"#111827",marginTop:8}}>{pickMl(typeInfo.name)}</div>}
+                {typeInfo && <div style={{fontSize:13.5,color:"#6b7280",marginTop:6,lineHeight:1.5,padding:"0 12px"}}>{pickMl(typeInfo.tag)}</div>}
+              </div>
+            )}
+            {/* Score ring — hidden for personality (code is the result) */}
+            {!isPersonality && (
+              <svg width="168" height="168" viewBox="0 0 168 168" style={{display:"block",margin:"0 auto 24px"}}>
+                <circle cx="84" cy="84" r="62" fill="none" stroke="#f3f4f6" strokeWidth="13"/>
+                <circle cx="84" cy="84" r="62" fill="none" stroke={cl} strokeWidth="13" strokeLinecap="round"
+                  strokeDasharray={`${dash} ${circ}`} transform="rotate(-90 84 84)"
+                  style={{transition:"stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1)",filter:`drop-shadow(0 0 6px ${cl}66)`}}/>
+                <text x="84" y="79" textAnchor="middle" fill={cl} fontSize="30" fontWeight="900" fontFamily="Inter,sans-serif">{s}</text>
+                <text x="84" y="100" textAnchor="middle" fill="#9ca3af" fontSize="14" fontFamily="Inter,sans-serif">/ {scoreMax}</text>
+              </svg>
+            )}
+            {/* Personality: scale breakdown */}
+            {isPersonality && personalityOut && (
+              <div style={{textAlign:"left",marginBottom:20,background:"#f9fafb",borderRadius:12,padding:"16px"}}>
+                <p style={{fontSize:12,fontWeight:700,color:"#6b7280",letterSpacing:".04em",marginBottom:12}}>{L("SHAXSIYAT SHKALALARI","ЛИЧНОСТНЫЕ ШКАЛЫ","PERSONALITY SCALES").toUpperCase()}</p>
+                {PERSONALITY_DATA.scales.map(sc=>{
+                  const r=personalityOut.shkalalar[sc.id]; if(!r) return null;
+                  const polLbl = pickMl(sc.pole[r.pole]);
+                  return (
+                    <div key={sc.id} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:12.5,color:"#374151",marginBottom:4,fontWeight:500}}>
+                        <span>{pickMl(sc.title)} — <b style={{color:sc.color}}>{polLbl}</b></span>
+                        <span style={{fontWeight:700,color:sc.color}}>{r.pct}%</span>
+                      </div>
+                      <div className="prog"><div className="prog-f" style={{width:`${r.pct}%`,background:sc.color}}/></div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {/* Category breakdown */}
             {Object.keys(catS).length>0&&(
               <div style={{textAlign:"left",marginBottom:20,background:"#f9fafb",borderRadius:12,padding:"16px"}}>
@@ -1205,8 +1329,9 @@ export default function App(){
             <option value="amocrm">📋 amoCRM bo'limi</option>
             <option value="umumiy">📚 Umumiy test</option>
             <option value="iq">🧠 IQ test</option>
-            <option value="personal">🎯 Personal test</option>
-            {QS_PERSONAL.filter(m=>m.key!=="core").map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Personal — Umumiy + {pickMl(m.label)}</option>)}
+            <option value="personal">🎯 Farosat test</option>
+            {QS_PERSONAL.filter(m=>m.key!=="core").map(m=><option key={`p-${m.key}`} value={`personal:${m.key}`}>🎯 Farosat — Umumiy + {pickMl(m.label)}</option>)}
+            <option value="personality">🧬 Personal test</option>
             {dbSections.map(s=><option key={s.id} value={`db:${s.id}`}>📚 {s.title_uz}</option>)}
           </select>
           <input type="search" value={srch} onChange={e=>setSrch(e.target.value)} placeholder={t.adm.search}
@@ -1243,10 +1368,10 @@ export default function App(){
                     <td style={{textAlign:"center"}}>
                       {(() => {
                         const sk = r.meta?.section_key || "";
-                        const isEval = sk==="iq" || sk==="personal" || sk.startsWith("personal:");
+                        const isEval = sk==="iq" || sk==="personal" || sk.startsWith("personal:") || sk==="personality";
                         return (
                           <div style={{display:"flex",gap:4,justifyContent:"center",flexWrap:"wrap"}}>
-                            {r.meta?.answers && <button onClick={()=>setMistakesRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12}}>👁 {L("Tafsilot","Детали","Details")}</button>}
+                            {r.meta?.answers && sk!=="personality" && <button onClick={()=>setMistakesRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12}}>👁 {L("Tafsilot","Детали","Details")}</button>}
                             {isEval && <button onClick={()=>setEvalRow(r)} className="btn btn-s" style={{padding:"4px 10px",fontSize:12,background:"#f0fdf4",color:"#166534",borderColor:"#bbf7d0"}}>🎯 {L("Baholash","Оценка","Evaluate")}</button>}
                             {!r.meta?.answers && !isEval && <span style={{color:"#d1d5db",fontSize:11}}>—</span>}
                           </div>
@@ -1306,16 +1431,23 @@ export default function App(){
           const sk = m.section_key || "";
           const isIqEval = sk === "iq";
           const isPersonalEval = sk === "personal" || sk.startsWith("personal:");
+          const isPersonalityEval = sk === "personality";
           const iqRes = isIqEval ? evaluateIq(m) : null;
           const pRes = isPersonalEval ? evaluatePersonal(m) : null;
-          const rec = combinedRecommendation(iqRes, pRes, isIqEval ? evalRole : null);
+          // Personality: data persisted in meta.personality. If missing (legacy row), recompute would need
+          // the raw answers map — we don't store itemId→picked for personality separately, so rely on meta.
+          const persRes:PersonalityResult|null = isPersonalityEval ? (m.personality || null) : null;
+          const persType = persRes ? PERSONALITY_DATA.types[persRes.tip] : null;
+          const rec = isPersonalityEval
+            ? { verdict:"ISHGA_OLISH_MUMKIN" as const, color:"green" as const, reason:{uz:"Shaxsiyat testi ishga olish qarori uchun emas — uslubni tushunish uchun.",ru:"Личностный тест не для найма — для понимания стиля.",en:"Personality test is not a hiring signal — it's a working-style map."} }
+            : combinedRecommendation(iqRes, pRes, isIqEval ? evalRole : null);
           const langE = lang as EvalLang;
           const recTxt = pickMl(rec.reason);
-          const verdictTxt = lang==="uz-cyrl" ? toCyrl(verdictLabel(rec.verdict,"uz")) : verdictLabel(rec.verdict, langE);
+          const verdictTxt = isPersonalityEval && persRes ? persRes.kod : (lang==="uz-cyrl" ? toCyrl(verdictLabel(rec.verdict,"uz")) : verdictLabel(rec.verdict, langE));
           const recBg = rec.color==="green" ? "#f0fdf4" : rec.color==="yellow" ? "#fefce8" : "#fef2f2";
           const recBd = rec.color==="green" ? "#86efac" : rec.color==="yellow" ? "#fde68a" : "#fecaca";
           const recFg = rec.color==="green" ? "#166534" : rec.color==="yellow" ? "#92400e" : "#991b1b";
-          const recIcon = rec.color==="green" ? "🟢" : rec.color==="yellow" ? "🟡" : "🔴";
+          const recIcon = isPersonalityEval ? "🧬" : rec.color==="green" ? "🟢" : rec.color==="yellow" ? "🟡" : "🔴";
           const blokLabel: Record<string,Ml> = {
             mantiq:  {uz:"Mantiq",ru:"Логика",en:"Logic"},
             sonli:   {uz:"Sonli",ru:"Счёт",en:"Numeric"},
@@ -1432,6 +1564,68 @@ export default function App(){
                   </div>
                 )}
 
+                {/* Personality block */}
+                {persRes && (
+                  <div style={{marginBottom:20}}>
+                    <div style={{fontSize:13,fontWeight:800,color:"#111827",marginBottom:10,letterSpacing:".02em"}}>🧬 {L("Shaxsiyat","Личность","Personality")} — {persRes.kod}</div>
+                    {persType && (
+                      <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
+                        <div style={{fontSize:16,fontWeight:900,color:"#111827",marginBottom:4}}>{pickMl(persType.name)}</div>
+                        <div style={{fontSize:12.5,color:"#6b7280",marginBottom:10,fontStyle:"italic"}}>{pickMl(persType.tag)}</div>
+                        <div style={{fontSize:13,color:"#374151",lineHeight:1.6,marginBottom:10}}>{pickMl(persType.about)}</div>
+                        {persType.strengths && (
+                          <div style={{marginBottom:8}}>
+                            <div style={{fontSize:12,fontWeight:700,color:"#166534",marginBottom:4}}>{L("Kuchli tomonlar","Сильные стороны","Strengths")}:</div>
+                            <ul style={{fontSize:12.5,color:"#374151",lineHeight:1.6,paddingLeft:20,margin:0}}>
+                              {(persType.strengths[lang==="uz-cyrl"?"uz":(lang as "uz"|"ru"|"en")]||persType.strengths.uz).slice(0,5).map((s,i)=>(
+                                <li key={i}>{lang==="uz-cyrl"?toCyrl(s):s}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {persType.weaknesses && (
+                          <div style={{marginBottom:8}}>
+                            <div style={{fontSize:12,fontWeight:700,color:"#92400e",marginBottom:4}}>{L("E'tibor berish kerak","Над чем работать","Watch out for")}:</div>
+                            <ul style={{fontSize:12.5,color:"#374151",lineHeight:1.6,paddingLeft:20,margin:0}}>
+                              {(persType.weaknesses[lang==="uz-cyrl"?"uz":(lang as "uz"|"ru"|"en")]||persType.weaknesses.uz).slice(0,5).map((s,i)=>(
+                                <li key={i}>{lang==="uz-cyrl"?toCyrl(s):s}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {persType.work && (
+                          <div style={{marginBottom:8,padding:10,background:"#eff6ff",borderRadius:8,border:"1px solid #dbeafe"}}>
+                            <div style={{fontSize:12,fontWeight:700,color:"#1e40af",marginBottom:4}}>{L("Ishda","В работе","At work")}:</div>
+                            <div style={{fontSize:12.5,color:"#1e40af",lineHeight:1.6}}>{pickMl(persType.work)}</div>
+                          </div>
+                        )}
+                        {persType.howto && (
+                          <div style={{padding:10,background:"#f0fdf4",borderRadius:8,border:"1px solid #bbf7d0"}}>
+                            <div style={{fontSize:12,fontWeight:700,color:"#166534",marginBottom:4}}>{L("U bilan qanday ishlash","Как работать с ним/ней","How to work with them")}:</div>
+                            <div style={{fontSize:12.5,color:"#166534",lineHeight:1.6}}>{pickMl(persType.howto)}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {/* Scale bars */}
+                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb"}}>
+                      <div style={{fontSize:12.5,fontWeight:700,color:"#374151",marginBottom:10}}>{L("Shkalalar","Шкалы","Scales")}:</div>
+                      {PERSONALITY_DATA.scales.map(sc=>{
+                        const r=persRes.shkalalar[sc.id]; if(!r) return null;
+                        return (
+                          <div key={sc.id} style={{marginBottom:8}}>
+                            <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#374151",marginBottom:3}}>
+                              <span>{pickMl(sc.title)} — <b style={{color:sc.color}}>{pickMl(sc.pole[r.pole])}</b></span>
+                              <span style={{fontWeight:700,color:sc.color}}>{r.pct}%</span>
+                            </div>
+                            <div className="prog" style={{height:5}}><div className="prog-f" style={{width:`${r.pct}%`,background:sc.color}}/></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div style={{fontSize:11,color:"#9ca3af",lineHeight:1.6,padding:"10px 12px",background:"#f9fafb",borderRadius:8,border:"1px solid #f3f4f6"}}>
                   ℹ️ {L("Chegara raqamlari boshlang'ich standart. Real 5-10 xodim testni yechgach kalibrovka qilinadi.","Пороговые значения — стартовые. После прохождения 5-10 реальными сотрудниками откалибруются.","Threshold numbers are initial defaults. Calibrate once 5-10 real employees have taken the test.")}
                 </div>
@@ -1459,7 +1653,7 @@ export default function App(){
             const combined = [...((modKey==="core"?[]:(core?.qs||[]))), ...(mod?.qs||[])];
             if(combined.length){
               questionsSrc = combined.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>({t:pickMl(o.t),pts:o.pts})),svg:undefined,__personal:true}));
-              sourceLabel = m.section_label || `Personal — Umumiy + ${pickMl(mod?.label||{uz:"",ru:"",en:""})}`;
+              sourceLabel = m.section_label || `Farosat — Umumiy + ${pickMl(mod?.label||{uz:"",ru:"",en:""})}`;
             }
           }
           // Replay the shuffle so admin sees the exact option order the user faced.

@@ -1,0 +1,2016 @@
+{
+ "scales": [
+  {
+   "id": "EI",
+   "a": "E",
+   "b": "I",
+   "color": "#3d8fb0",
+   "title": {
+    "uz": "Energiya",
+    "ru": "Энергия",
+    "en": "Energy"
+   },
+   "pole": {
+    "E": {
+     "uz": "Ekstravert",
+     "ru": "Экстраверт",
+     "en": "Extraverted"
+    },
+    "I": {
+     "uz": "Introvert",
+     "ru": "Интроверт",
+     "en": "Introverted"
+    }
+   },
+   "desc": {
+    "E": {
+     "uz": "Siz odamlar orasida kuch olasiz: ochiq, faol muloqot va jamoaviy ish sizni ruhlantiradi.",
+     "ru": "Вы черпаете энергию в людях: открытое, активное общение и командная работа вас заряжают.",
+     "en": "You likely draw energy from people: open, active communication and teamwork recharge you."
+    },
+    "I": {
+     "uz": "Siz kuchni yolg'izlikda yoki tor davrada tiklaysiz: chuqur, tinch suhbatni shovqinli davradan afzal ko'rasiz.",
+     "ru": "Вы восстанавливаете силы наедине или в узком кругу: глубокий спокойный разговор вам ближе шумной компании.",
+     "en": "You likely recharge alone or in a small circle, preferring deep, quiet conversations to noisy groups."
+    }
+   }
+  },
+  {
+   "id": "NS",
+   "a": "N",
+   "b": "S",
+   "color": "#e0a930",
+   "title": {
+    "uz": "Idrok",
+    "ru": "Восприятие",
+    "en": "Perception"
+   },
+   "pole": {
+    "N": {
+     "uz": "Sezgir (intuitiv)",
+     "ru": "Интуитивный",
+     "en": "Intuitive"
+    },
+    "S": {
+     "uz": "Amaliy (kuzatuvchan)",
+     "ru": "Практичный",
+     "en": "Sensing"
+    }
+   },
+   "desc": {
+    "N": {
+     "uz": "Siz tasavvurga boy va ochiq fikrlisiz: narsalarning yashirin ma'nosi va kelajakdagi imkoniyatlariga qaraysiz.",
+     "ru": "Вы наделены воображением и открыты новому: смотрите на скрытый смысл и будущие возможности.",
+     "en": "You're likely imaginative and open-minded, focusing on hidden meanings and future possibilities."
+    },
+    "S": {
+     "uz": "Siz amaliy va realistsiz: faktlar, tajriba va hozirgi holatga tayanasiz.",
+     "ru": "Вы практичны и реалистичны: опираетесь на факты, опыт и текущее положение дел.",
+     "en": "You're likely practical and down-to-earth, relying on facts, experience and the present."
+    }
+   }
+  },
+  {
+   "id": "TF",
+   "a": "T",
+   "b": "F",
+   "color": "#2f9e6e",
+   "title": {
+    "uz": "Qaror",
+    "ru": "Решения",
+    "en": "Decisions"
+   },
+   "pole": {
+    "T": {
+     "uz": "Mantiqiy",
+     "ru": "Логический",
+     "en": "Thinking"
+    },
+    "F": {
+     "uz": "Hissiy",
+     "ru": "Чувствующий",
+     "en": "Feeling"
+    }
+   },
+   "desc": {
+    "T": {
+     "uz": "Qaror qilganda siz mantiq va xolis tahlilga tayanasiz, samaradorlikni qadrlaysiz.",
+     "ru": "Принимая решения, вы опираетесь на логику и объективный анализ, цените эффективность.",
+     "en": "You likely base decisions on logic and objective analysis, valuing efficiency."
+    },
+    "F": {
+     "uz": "Qaror qilganda siz odamlarga ta'sirini, his-tuyg'ular va qadriyatlarni hisobga olasiz.",
+     "ru": "Принимая решения, вы учитываете их влияние на людей, чувства и ценности.",
+     "en": "You likely weigh how decisions affect people, along with feelings and values."
+    }
+   }
+  },
+  {
+   "id": "JP",
+   "a": "J",
+   "b": "P",
+   "color": "#8a5fa3",
+   "title": {
+    "uz": "Ish uslubi",
+    "ru": "Стиль действий",
+    "en": "Approach"
+   },
+   "pole": {
+    "J": {
+     "uz": "Tartibli",
+     "ru": "Организованный",
+     "en": "Judging"
+    },
+    "P": {
+     "uz": "Moslashuvchan",
+     "ru": "Гибкий",
+     "en": "Perceiving"
+    }
+   },
+   "desc": {
+    "J": {
+     "uz": "Siz reja, tartib va aniqlikni yoqtirasiz, ishni oxiriga yetkazishga intilasiz.",
+     "ru": "Вы любите план, порядок и определённость, стремитесь доводить дела до конца.",
+     "en": "You likely prefer plans, order and clarity, and like to see things through."
+    },
+    "P": {
+     "uz": "Siz moslashuvchansiz: imkoniyatlarni ochiq qoldirasiz va vaziyatga qarab harakat qilasiz.",
+     "ru": "Вы гибки: оставляете варианты открытыми и действуете по ситуации.",
+     "en": "You're likely flexible, keeping options open and adapting as you go."
+    }
+   }
+  },
+  {
+   "id": "AT",
+   "a": "A",
+   "b": "T",
+   "color": "#e8585c",
+   "title": {
+    "uz": "O'zini his qilish",
+    "ru": "Самоощущение",
+    "en": "Identity"
+   },
+   "pole": {
+    "A": {
+     "uz": "O'ziga ishongan",
+     "ru": "Уверенный",
+     "en": "Assured"
+    },
+    "T": {
+     "uz": "Ta'sirchan",
+     "ru": "Чувствительный",
+     "en": "Tense"
+    }
+   },
+   "desc": {
+    "A": {
+     "uz": "Siz o'zingizga ishonasiz, bosim ostida xotirjam qolasiz va xatolar ustida uzoq qayg'urmaysiz.",
+     "ru": "Вы уверены в себе, сохраняете спокойствие под давлением и не зацикливаетесь на ошибках.",
+     "en": "You're likely self-assured, calm under pressure and don't dwell on mistakes."
+    },
+    "T": {
+     "uz": "Siz o'zingizga talabchansiz, natijani doim yaxshilashga intilasiz, lekin xavotir va o'zingizni koyishga moyilsiz.",
+     "ru": "Вы требовательны к себе и стремитесь улучшать результат, но склонны к тревоге и самокритике.",
+     "en": "You're likely self-demanding and always striving to improve, but prone to worry and self-criticism."
+    }
+   }
+  }
+ ],
+ "items": [
+  {
+   "id": "E1",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "I feel comfortable around people.",
+    "uz": "Odamlar orasida o'zimni erkin his qilaman.",
+    "ru": "Среди людей я чувствую себя свободно."
+   }
+  },
+  {
+   "id": "N1",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "I enjoy thinking about abstract ideas.",
+    "uz": "Mavhum g'oyalar haqida o'ylash menga yoqadi.",
+    "ru": "Мне нравится размышлять над абстрактными идеями."
+   }
+  },
+  {
+   "id": "T1",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "I make decisions based on how they will affect people.",
+    "uz": "Qarorlarimni ular odamlarga qanday ta'sir qilishiga qarab qabul qilaman.",
+    "ru": "Я принимаю решения, исходя из того, как они повлияют на людей."
+   }
+  },
+  {
+   "id": "J1",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I like to plan my day in advance.",
+    "uz": "Kunimni oldindan rejalashtirishni yoqtiraman.",
+    "ru": "Я люблю заранее планировать свой день."
+   }
+  },
+  {
+   "id": "A1",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "I feel confident in myself most of the time.",
+    "uz": "Ko'pincha o'zimga ishonaman.",
+    "ru": "Большую часть времени я уверен в себе."
+   }
+  },
+  {
+   "id": "E2",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "I start conversations with strangers easily.",
+    "uz": "Notanish odamlar bilan osongina suhbat boshlayman.",
+    "ru": "Я легко начинаю разговор с незнакомыми людьми."
+   }
+  },
+  {
+   "id": "N2",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I prefer proven, practical methods to new untested ones.",
+    "uz": "Yangi, sinalmagan usullardan ko'ra amalda sinalgan usullarni afzal ko'raman.",
+    "ru": "Я предпочитаю проверенные практические методы новым и неопробованным."
+   }
+  },
+  {
+   "id": "T2",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "When making decisions, logic matters more to me than feelings.",
+    "uz": "Qaror qabul qilishda men uchun mantiq his-tuyg'ulardan muhimroq.",
+    "ru": "При принятии решений логика для меня важнее чувств."
+   }
+  },
+  {
+   "id": "J2",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "I prefer to keep my options open rather than commit to a plan.",
+    "uz": "Aniq rejaga bog'lanib qolishdan ko'ra imkoniyatlarni ochiq qoldirishni afzal ko'raman.",
+    "ru": "Я предпочитаю оставлять варианты открытыми, а не связывать себя планом."
+   }
+  },
+  {
+   "id": "A2",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "I worry about things that might go wrong.",
+    "uz": "Nimadir noto'g'ri ketishi mumkinligidan xavotirlanaman.",
+    "ru": "Я переживаю из-за того, что что-то может пойти не так."
+   }
+  },
+  {
+   "id": "E3",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "After a busy social day, I need time alone to recharge.",
+    "uz": "Ko'p odam bilan o'tgan kundan keyin kuch yig'ish uchun yolg'iz qolishim kerak.",
+    "ru": "После насыщенного общением дня мне нужно побыть одному, чтобы восстановиться."
+   }
+  },
+  {
+   "id": "N3",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "I often think about how things could be in the future.",
+    "uz": "Kelajakda narsalar qanday bo'lishi mumkinligi haqida tez-tez o'ylayman.",
+    "ru": "Я часто думаю о том, какими всё может стать в будущем."
+   }
+  },
+  {
+   "id": "T3",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "I easily sense what other people are feeling.",
+    "uz": "Boshqalar nimani his qilayotganini oson sezaman.",
+    "ru": "Я легко чувствую, что переживают другие."
+   }
+  },
+  {
+   "id": "J3",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I finish tasks well before the deadline.",
+    "uz": "Ishlarni muddatidan ancha oldin tugataman.",
+    "ru": "Я заканчиваю дела задолго до срока."
+   }
+  },
+  {
+   "id": "A3",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "I stay calm under pressure.",
+    "uz": "Bosim ostida xotirjam qolaman.",
+    "ru": "Под давлением я сохраняю спокойствие."
+   }
+  },
+  {
+   "id": "E4",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "At gatherings I talk to many different people.",
+    "uz": "Yig'inlarda turli odamlar bilan ko'p gaplashaman.",
+    "ru": "На встречах я общаюсь со многими разными людьми."
+   }
+  },
+  {
+   "id": "N4",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I pay more attention to facts than to theories.",
+    "uz": "Nazariyalardan ko'ra faktlarga ko'proq e'tibor beraman.",
+    "ru": "Я больше обращаю внимание на факты, чем на теории."
+   }
+  },
+  {
+   "id": "T4",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "I can criticize someone's work without worrying about hurting them.",
+    "uz": "Birovning ishini, uni xafa qilishdan xavotirlanmay, tanqid qila olaman.",
+    "ru": "Я могу критиковать чужую работу, не беспокоясь, что задену человека."
+   }
+  },
+  {
+   "id": "J4",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "I often do things at the last minute.",
+    "uz": "Ko'pincha ishlarni oxirgi daqiqada qilaman.",
+    "ru": "Я часто делаю дела в последний момент."
+   }
+  },
+  {
+   "id": "A4",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "I often doubt my decisions after I make them.",
+    "uz": "Qaror qabul qilgach, ko'pincha unga shubha qilaman.",
+    "ru": "Я часто сомневаюсь в решениях уже после того, как их принял."
+   }
+  },
+  {
+   "id": "E5",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "I prefer a few close friends to a large circle of acquaintances.",
+    "uz": "Katta tanishlar davrasidan ko'ra bir nechta yaqin do'stni afzal ko'raman.",
+    "ru": "Я предпочитаю нескольких близких друзей широкому кругу знакомых."
+   }
+  },
+  {
+   "id": "N5",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "I like to look for hidden meanings and patterns.",
+    "uz": "Yashirin ma'no va qonuniyatlarni izlash menga yoqadi.",
+    "ru": "Мне нравится искать скрытые смыслы и закономерности."
+   }
+  },
+  {
+   "id": "T5",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "It is hard for me to say no when someone asks for help.",
+    "uz": "Kimdir yordam so'rasa, «yo'q» deyish men uchun qiyin.",
+    "ru": "Мне трудно отказать, когда кто-то просит о помощи."
+   }
+  },
+  {
+   "id": "J5",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I keep my things neat and organized.",
+    "uz": "Narsalarimni toza va tartibli saqlayman.",
+    "ru": "Я держу свои вещи в чистоте и порядке."
+   }
+  },
+  {
+   "id": "A5",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "Criticism rarely upsets me for long.",
+    "uz": "Tanqid meni uzoq vaqt xafa qilmaydi.",
+    "ru": "Критика редко надолго выбивает меня из колеи."
+   }
+  },
+  {
+   "id": "E6",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "I enjoy being the center of attention.",
+    "uz": "Diqqat markazida bo'lish menga yoqadi.",
+    "ru": "Мне нравится быть в центре внимания."
+   }
+  },
+  {
+   "id": "N6",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I focus on what is real now rather than on what might be.",
+    "uz": "Nima bo'lishi mumkinligidan ko'ra hozir bor narsaga e'tibor qarataman.",
+    "ru": "Я сосредотачиваюсь на том, что есть сейчас, а не на том, что может быть."
+   }
+  },
+  {
+   "id": "T6",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "In an argument, being right matters more to me than keeping the peace.",
+    "uz": "Bahsda tinchlikni saqlashdan ko'ra haq bo'lish men uchun muhimroq.",
+    "ru": "В споре для меня важнее оказаться правым, чем сохранить мир."
+   }
+  },
+  {
+   "id": "J6",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "I enjoy improvising more than following a schedule.",
+    "uz": "Jadvalga amal qilishdan ko'ra vaziyatga qarab harakat qilish menga ko'proq yoqadi.",
+    "ru": "Мне больше нравится импровизировать, чем следовать расписанию."
+   }
+  },
+  {
+   "id": "A6",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "My mood changes easily.",
+    "uz": "Kayfiyatim tez o'zgaradi.",
+    "ru": "Моё настроение легко меняется."
+   }
+  },
+  {
+   "id": "E7",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "I usually think things through before I speak.",
+    "uz": "Odatda gapirishdan oldin yaxshilab o'ylab olaman.",
+    "ru": "Обычно я всё обдумываю, прежде чем что-то сказать."
+   }
+  },
+  {
+   "id": "N7",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "I enjoy discussing philosophical questions.",
+    "uz": "Falsafiy savollarni muhokama qilishni yoqtiraman.",
+    "ru": "Мне нравится обсуждать философские вопросы."
+   }
+  },
+  {
+   "id": "T7",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "Other people's stories move me deeply.",
+    "uz": "Boshqalarning hikoyalari menga chuqur ta'sir qiladi.",
+    "ru": "Чужие истории глубоко меня трогают."
+   }
+  },
+  {
+   "id": "J7",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I feel uneasy when things are left undecided.",
+    "uz": "Masalalar hal qilinmay qolsa, bezovta bo'laman.",
+    "ru": "Мне не по себе, когда вопросы остаются нерешёнными."
+   }
+  },
+  {
+   "id": "A7",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "I rarely feel stressed.",
+    "uz": "Kamdan-kam stress his qilaman.",
+    "ru": "Я редко испытываю стресс."
+   }
+  },
+  {
+   "id": "E8",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "I feel energized after spending time with a group of people.",
+    "uz": "Odamlar davrasida vaqt o'tkazganimdan keyin kuchga to'laman.",
+    "ru": "После времени в компании я чувствую прилив сил."
+   }
+  },
+  {
+   "id": "N8",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I prefer clear, step-by-step instructions.",
+    "uz": "Aniq, bosqichma-bosqich ko'rsatmalarni afzal ko'raman.",
+    "ru": "Я предпочитаю чёткие пошаговые инструкции."
+   }
+  },
+  {
+   "id": "T8",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "I would rather analyze a problem than talk about emotions.",
+    "uz": "His-tuyg'ular haqida gapirishdan ko'ra muammoni tahlil qilishni afzal ko'raman.",
+    "ru": "Я предпочитаю анализировать проблему, а не говорить об эмоциях."
+   }
+  },
+  {
+   "id": "J8",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "I easily change my plans when something interesting comes up.",
+    "uz": "Qiziq narsa chiqib qolsa, rejamni osongina o'zgartiraman.",
+    "ru": "Я легко меняю планы, если появляется что-то интересное."
+   }
+  },
+  {
+   "id": "A8",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "I keep thinking about my mistakes for a long time.",
+    "uz": "Xatolarim haqida uzoq vaqt o'ylab yuraman.",
+    "ru": "Я долго прокручиваю в голове свои ошибки."
+   }
+  },
+  {
+   "id": "E9",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "I avoid noisy, crowded places when I can.",
+    "uz": "Imkon bo'lsa, shovqinli va gavjum joylardan qochaman.",
+    "ru": "По возможности я избегаю шумных и людных мест."
+   }
+  },
+  {
+   "id": "N9",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "I often have ideas that others find unusual.",
+    "uz": "Ko'pincha boshqalarga g'alati tuyuladigan g'oyalarim bo'ladi.",
+    "ru": "У меня часто бывают идеи, которые другим кажутся необычными."
+   }
+  },
+  {
+   "id": "T9",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "I try to make sure everyone in the group feels comfortable.",
+    "uz": "Davradagi har bir kishi o'zini qulay his qilishiga harakat qilaman.",
+    "ru": "Я стараюсь, чтобы всем в компании было комфортно."
+   }
+  },
+  {
+   "id": "J9",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I make lists to keep track of what I need to do.",
+    "uz": "Qiladigan ishlarimni kuzatib borish uchun ro'yxat tuzaman.",
+    "ru": "Я составляю списки, чтобы не забыть, что нужно сделать."
+   }
+  },
+  {
+   "id": "A9",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "I recover quickly from setbacks.",
+    "uz": "Muvaffaqiyatsizlikdan tez o'zimga kelaman.",
+    "ru": "Я быстро восстанавливаюсь после неудач."
+   }
+  },
+  {
+   "id": "E10",
+   "scale": "EI",
+   "key": "E",
+   "text": {
+    "en": "I find it easy to introduce myself to new people.",
+    "uz": "Yangi odamlarga o'zimni tanishtirish men uchun oson.",
+    "ru": "Мне легко представиться новым людям."
+   }
+  },
+  {
+   "id": "N10",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I trust my experience more than my imagination.",
+    "uz": "Tasavvurimdan ko'ra tajribamga ko'proq ishonaman.",
+    "ru": "Я больше доверяю опыту, чем воображению."
+   }
+  },
+  {
+   "id": "T10",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "I value efficiency more than harmony.",
+    "uz": "Ahillikdan ko'ra samaradorlikni qadrlayman.",
+    "ru": "Я ценю эффективность больше, чем гармонию."
+   }
+  },
+  {
+   "id": "J10",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "Rules and fixed routines feel restrictive to me.",
+    "uz": "Qoidalar va qat'iy tartib meni cheklab qo'yayotgandek tuyuladi.",
+    "ru": "Правила и жёсткий распорядок кажутся мне ограничивающими."
+   }
+  },
+  {
+   "id": "A10",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "I get embarrassed easily.",
+    "uz": "Oson xijolat bo'laman.",
+    "ru": "Я легко смущаюсь."
+   }
+  },
+  {
+   "id": "E11",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "I prefer to work quietly on my own.",
+    "uz": "Tinch, mustaqil ishlashni afzal ko'raman.",
+    "ru": "Я предпочитаю работать спокойно и самостоятельно."
+   }
+  },
+  {
+   "id": "N11",
+   "scale": "NS",
+   "key": "N",
+   "text": {
+    "en": "Routine, repetitive tasks bore me quickly.",
+    "uz": "Bir xil, takroriy ishlar meni tez zeriktiradi.",
+    "ru": "Рутинная, однообразная работа быстро мне надоедает."
+   }
+  },
+  {
+   "id": "T11",
+   "scale": "TF",
+   "key": "F",
+   "text": {
+    "en": "I often put other people's needs before my own.",
+    "uz": "Ko'pincha boshqalarning ehtiyojini o'zimnikidan ustun qo'yaman.",
+    "ru": "Я часто ставлю потребности других выше своих."
+   }
+  },
+  {
+   "id": "J11",
+   "scale": "JP",
+   "key": "J",
+   "text": {
+    "en": "I prefer to finish one task before starting another.",
+    "uz": "Bitta ishni tugatmay turib boshqasini boshlamaslikni afzal ko'raman.",
+    "ru": "Я предпочитаю закончить одно дело, прежде чем браться за другое."
+   }
+  },
+  {
+   "id": "A11",
+   "scale": "AT",
+   "key": "A",
+   "text": {
+    "en": "I am satisfied with who I am.",
+    "uz": "O'zimdan mamnunman.",
+    "ru": "Я доволен тем, какой я есть."
+   }
+  },
+  {
+   "id": "E12",
+   "scale": "EI",
+   "key": "I",
+   "text": {
+    "en": "I don't like to draw attention to myself.",
+    "uz": "O'zimga e'tibor tortishni yoqtirmayman.",
+    "ru": "Я не люблю привлекать к себе внимание."
+   }
+  },
+  {
+   "id": "N12",
+   "scale": "NS",
+   "key": "S",
+   "text": {
+    "en": "I care more about how things work in practice than about ideas.",
+    "uz": "G'oyalardan ko'ra narsalarning amalda qanday ishlashi meni ko'proq qiziqtiradi.",
+    "ru": "Меня больше интересует, как всё работает на практике, чем идеи."
+   }
+  },
+  {
+   "id": "T12",
+   "scale": "TF",
+   "key": "T",
+   "text": {
+    "en": "Emotional arguments rarely convince me.",
+    "uz": "Hissiyotga asoslangan dalillar meni kamdan-kam ishontiradi.",
+    "ru": "Эмоциональные доводы редко меня убеждают."
+   }
+  },
+  {
+   "id": "J12",
+   "scale": "JP",
+   "key": "P",
+   "text": {
+    "en": "I often start many things and don't finish all of them.",
+    "uz": "Ko'p ishni boshlab, hammasini ham oxiriga yetkazmayman.",
+    "ru": "Я часто начинаю много дел и не все довожу до конца."
+   }
+  },
+  {
+   "id": "A12",
+   "scale": "AT",
+   "key": "T",
+   "text": {
+    "en": "I often compare myself with others and feel I fall short.",
+    "uz": "Ko'pincha o'zimni boshqalar bilan solishtirib, ulardan orqada qolgandek his qilaman.",
+    "ru": "Я часто сравниваю себя с другими и чувствую, что уступаю им."
+   }
+  }
+ ],
+ "types": {
+  "INTJ": {
+   "group": "NT",
+   "name": {
+    "uz": "Strateg",
+    "ru": "Стратег",
+    "en": "Strategist"
+   },
+   "tag": {
+    "uz": "Har narsaga uzoq muddatli rejasi bor mustaqil fikrlovchi.",
+    "ru": "Независимый мыслитель с долгосрочным планом на всё.",
+    "en": "An independent thinker with a long-term plan for everything."
+   },
+   "about": {
+    "uz": "Katta manzarani ko'radi va unga yetish rejasini tuzadi. Bilim va mantiqni qadrlaydi, mustaqil ishlaganda eng yaxshi natija beradi, samarasiz ishga toqati yo'q.",
+    "ru": "Видит общую картину и выстраивает план, как к ней прийти. Ценит компетентность и логику, лучше всего работает самостоятельно и не терпит неэффективности.",
+    "en": "Sees the big picture and builds a plan to get there. Values competence and logic, works best independently and has little patience for inefficiency."
+   },
+   "str": {
+    "uz": [
+     "Strategik fikrlash",
+     "Mustaqillik",
+     "Yuqori talabchanlik",
+     "Qat'iyat"
+    ],
+    "ru": [
+     "Стратегическое мышление",
+     "Независимость",
+     "Высокие стандарты",
+     "Решительность"
+    ],
+    "en": [
+     "Strategic thinking",
+     "Independence",
+     "High standards",
+     "Decisiveness"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Sovuq yoki uzoq ko'rinishi mumkin",
+     "Sekinroq odamlarga sabrsiz",
+     "His-tuyg'ularni e'tiborsiz qoldiradi",
+     "Haddan tashqari tanqidiy"
+    ],
+    "ru": [
+     "Может казаться холодным",
+     "Нетерпелив к медлительным",
+     "Игнорирует эмоции",
+     "Чрезмерно критичен"
+    ],
+    "en": [
+     "Can seem cold or distant",
+     "Impatient with slower people",
+     "Overlooks emotions",
+     "Overly critical"
+    ]
+   },
+   "work": {
+    "uz": "Rejalashtirish, tahlil va murakkab muammolarni hal qilishda, erkinlik berilganda kuchli.",
+    "ru": "Силён в планировании, анализе и решении сложных задач, когда есть свобода действий.",
+    "en": "Strong in planning, analysis and complex problem-solving when given autonomy."
+   },
+   "manage": {
+    "uz": "Aniq maqsad bering, unga qanday yetishni o'ziga qo'ying; talabingizni mantiq bilan asoslang.",
+    "ru": "Ставьте чёткие цели и дайте свободу в способах; подкрепляйте требования логикой.",
+    "en": "Give clear goals and freedom in how to reach them; back your requests with logic."
+   }
+  },
+  "INTP": {
+   "group": "NT",
+   "name": {
+    "uz": "Mutafakkir",
+    "ru": "Мыслитель",
+    "en": "Thinker"
+   },
+   "tag": {
+    "uz": "G'oyalarni va narsalar qanday ishlashini sevadigan qiziquvchan tahlilchi.",
+    "ru": "Любознательный аналитик, которому интересны идеи и устройство вещей.",
+    "en": "A curious analyst who loves ideas and how things work."
+   },
+   "about": {
+    "uz": "Muammoni qismlarga ajratib, uning mantig'ini tushunishni yoqtiradi. Fikrlashi original va moslashuvchan, lekin jumboq yechilgach qiziqishi so'nishi mumkin.",
+    "ru": "Любит разбирать проблему на части и понимать её логику. Мыслит оригинально и гибко, но может потерять интерес, когда загадка решена.",
+    "en": "Enjoys taking problems apart and understanding the logic underneath. Thinks in original, flexible ways, but may lose interest once the puzzle is solved."
+   },
+   "str": {
+    "uz": [
+     "Tahliliy aql",
+     "Originallik",
+     "Ochiq fikrlilik",
+     "Xolislik"
+    ],
+    "ru": [
+     "Аналитический ум",
+     "Оригинальность",
+     "Открытость",
+     "Объективность"
+    ],
+    "en": [
+     "Analytical mind",
+     "Originality",
+     "Open-mindedness",
+     "Objectivity"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Kundalik ishlarda parishonxotir",
+     "Ishni oxiriga yetkazish qiyin",
+     "Befarq ko'rinishi mumkin",
+     "Ortiqcha o'ylaydi"
+    ],
+    "ru": [
+     "Рассеян в рутине",
+     "С трудом доводит до конца",
+     "Может казаться отстранённым",
+     "Слишком много размышляет"
+    ],
+    "en": [
+     "Absent-minded with routine",
+     "Struggles to finish",
+     "Can seem detached",
+     "Overthinks"
+    ]
+   },
+   "work": {
+    "uz": "Tadqiqot, tahlil, texnik va yangi yechim talab qiladigan ishlarda kuchli.",
+    "ru": "Силён в исследованиях, анализе, технических задачах и там, где нужны новые решения.",
+    "en": "Strong in research, analysis, technical work and anything that needs a new solution."
+   },
+   "manage": {
+    "uz": "Qiziq masala va izlanishga imkon bering; muddat va yakunlashda yordam bering.",
+    "ru": "Давайте интересные задачи и простор для поиска; помогайте со сроками и завершением.",
+    "en": "Give interesting problems and room to explore; help with deadlines and follow-through."
+   }
+  },
+  "ENTJ": {
+   "group": "NT",
+   "name": {
+    "uz": "Yetakchi",
+    "ru": "Лидер",
+    "en": "Leader"
+   },
+   "tag": {
+    "uz": "Tashabbusni qo'lga olib, natijaga olib boradigan dadil tashkilotchi.",
+    "ru": "Смелый организатор, который берёт руководство на себя и добивается результата.",
+    "en": "A bold organizer who takes charge and drives results."
+   },
+   "about": {
+    "uz": "Yo'nalish belgilash, odamlar va resurslarni tashkil qilish, maqsad sari olib borishda tug'ma qobiliyatli. O'ziga ishongan va talabchan, samaradorlikka katta e'tibor beradi.",
+    "ru": "Прирождённо задаёт направление, организует людей и ресурсы и ведёт к цели. Уверен в себе и требователен, сильно ориентирован на эффективность.",
+    "en": "A natural at setting direction, organizing people and resources and pushing toward goals. Confident and demanding, with a strong focus on efficiency."
+   },
+   "str": {
+    "uz": [
+     "Yetakchilik",
+     "Strategik rejalashtirish",
+     "O'ziga ishonch",
+     "Natijaga intilish"
+    ],
+    "ru": [
+     "Лидерство",
+     "Стратегическое планирование",
+     "Уверенность",
+     "Нацеленность на результат"
+    ],
+    "en": [
+     "Leadership",
+     "Strategic planning",
+     "Confidence",
+     "Drive for results"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Hukmron bo'lishi mumkin",
+     "Sabrsiz",
+     "His-tuyg'ularni e'tiborsiz qoldiradi",
+     "O'jar"
+    ],
+    "ru": [
+     "Может подавлять",
+     "Нетерпелив",
+     "Не учитывает чувства",
+     "Упрям"
+    ],
+    "en": [
+     "Can be domineering",
+     "Impatient",
+     "Overlooks feelings",
+     "Stubborn"
+    ]
+   },
+   "work": {
+    "uz": "Boshqaruv, loyihalar va kimdir boshchilik qilishi kerak bo'lgan vaziyatlarda kuchli.",
+    "ru": "Силён в управлении, проектах и ситуациях, где кто-то должен взять руководство.",
+    "en": "Strong in management, projects and situations where someone needs to take the lead."
+   },
+   "manage": {
+    "uz": "Mas'uliyat va katta maqsad bering; ochiq, to'g'ridan-to'g'ri gapirishga tayyor bo'ling.",
+    "ru": "Давайте ответственность и амбициозные цели; будьте готовы к прямому общению.",
+    "en": "Give responsibility and ambitious targets; expect direct communication."
+   }
+  },
+  "ENTP": {
+   "group": "NT",
+   "name": {
+    "uz": "Ixtirochi",
+    "ru": "Изобретатель",
+    "en": "Inventor"
+   },
+   "tag": {
+    "uz": "Qiyin masala va bahsni yaxshi ko'radigan zukko novator.",
+    "ru": "Находчивый новатор, который любит вызовы и споры.",
+    "en": "A quick-witted innovator who loves a challenge and a good debate."
+   },
+   "about": {
+    "uz": "G'oyalarni oson topadi, bahslashish va odatiy tartibga qarshi chiqishni yoqtiradi. G'ayratli va topqir, lekin mayda detal va takroriy ishdan zerikadi.",
+    "ru": "Легко генерирует идеи, любит спорить и бросать вызов привычному порядку. Энергичен и изобретателен, но скучает от деталей и рутины.",
+    "en": "Generates ideas easily and enjoys debating and challenging the usual way of doing things. Energetic and resourceful, but bored by details and routine."
+   },
+   "str": {
+    "uz": [
+     "Ijodkorlik",
+     "Tez fikrlash",
+     "Ishontira olish",
+     "Moslashuvchanlik"
+    ],
+    "ru": [
+     "Креативность",
+     "Быстрота мышления",
+     "Убедительность",
+     "Гибкость"
+    ],
+    "en": [
+     "Creativity",
+     "Quick thinking",
+     "Persuasiveness",
+     "Adaptability"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Bahsga moyil",
+     "Ishni chala qoldiradi",
+     "Detallarni o'tkazib yuboradi",
+     "Takroriy ishdan zerikadi"
+    ],
+    "ru": [
+     "Склонен спорить",
+     "Бросает дела незаконченными",
+     "Упускает детали",
+     "Скучает от рутины"
+    ],
+    "en": [
+     "Argumentative",
+     "Leaves things unfinished",
+     "Misses details",
+     "Bored by routine"
+    ]
+   },
+   "work": {
+    "uz": "Yangi loyihalar, g'oyalar muhokamasi, muzokaralar va g'ayrioddiy muammolarda kuchli.",
+    "ru": "Силён в новых проектах, мозговых штурмах, переговорах и нестандартных задачах.",
+    "en": "Strong in new projects, brainstorming, negotiations and unusual problems."
+   },
+   "manage": {
+    "uz": "G'oya topish va sinashga imkon bering; yoniga kuchli ijrochi qo'ying.",
+    "ru": "Дайте генерировать и проверять идеи; поставьте рядом сильного исполнителя.",
+    "en": "Let them generate and test ideas; pair them with a strong executor."
+   }
+  },
+  "INFJ": {
+   "group": "NF",
+   "name": {
+    "uz": "Murabbiy",
+    "ru": "Наставник",
+    "en": "Mentor"
+   },
+   "tag": {
+    "uz": "Odamlarni chuqur tushunadigan va ularning o'sishiga yordam beradigan kamgap idealist.",
+    "ru": "Спокойный идеалист, который глубоко понимает людей и помогает им расти.",
+    "en": "A quiet idealist who understands people deeply and helps them grow."
+   },
+   "about": {
+    "uz": "Odamlarni yaxshi his qiladi va kuchli qadriyatlarga amal qiladi. Ma'no va kelajak haqida o'ylaydi, chuqur suhbatni afzal ko'radi va o'zi uchun muhim maqsad sari barqaror harakat qiladi.",
+    "ru": "Тонко чувствует людей и руководствуется твёрдыми ценностями. Думает о смысле и будущем, предпочитает глубокие разговоры и настойчиво идёт к важным для себя целям.",
+    "en": "Reads people well and is guided by strong values. Thinks about meaning and the future, prefers deep conversations and works steadily toward goals that matter to them."
+   },
+   "str": {
+    "uz": [
+     "Odamlarni tushunish",
+     "Uzoqni ko'rish",
+     "Tamoyillilik",
+     "Fidoyilik"
+    ],
+    "ru": [
+     "Понимание людей",
+     "Видение будущего",
+     "Принципиальность",
+     "Преданность делу"
+    ],
+    "en": [
+     "Understanding people",
+     "Long-term vision",
+     "Principled",
+     "Dedication"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Ko'p yukni o'ziga oladi",
+     "Mukammallikka haddan tashqari intiladi",
+     "Tanqidni shaxsiy qabul qiladi",
+     "O'z ehtiyojlarini yashiradi"
+    ],
+    "ru": [
+     "Берёт на себя слишком много",
+     "Перфекционизм",
+     "Принимает критику лично",
+     "Скрывает свои потребности"
+    ],
+    "en": [
+     "Takes on too much",
+     "Perfectionism",
+     "Takes criticism personally",
+     "Hides own needs"
+    ]
+   },
+   "work": {
+    "uz": "Odamlar bilan ishlash, maslahat berish, strategiya, yozish va ma'noli loyihalarda kuchli.",
+    "ru": "Силён в работе с людьми, консультировании, стратегии, текстах и значимых проектах.",
+    "en": "Strong in people-focused work, advising, strategy, writing and meaningful projects."
+   },
+   "manage": {
+    "uz": "Vazifaning «nega»sini tushuntiring; tinch muhit va samimiy fikr-mulohaza bering.",
+    "ru": "Объясняйте «зачем»; обеспечьте спокойную обстановку и искреннюю обратную связь.",
+    "en": "Explain the \"why\" behind tasks; give a calm environment and sincere feedback."
+   }
+  },
+  "INFP": {
+   "group": "NF",
+   "name": {
+    "uz": "Idealist",
+    "ru": "Идеалист",
+    "en": "Idealist"
+   },
+   "tag": {
+    "uz": "Shaxsiy qadriyatlariga tayanadigan muloyim, ijodkor inson.",
+    "ru": "Мягкий творческий человек, которым движут личные ценности.",
+    "en": "A gentle, creative person guided by personal values."
+   },
+   "about": {
+    "uz": "Ichki qadriyatlar va samimiylikka intilish bilan harakat qiladi. Hamdard va tasavvurga boy, lekin qattiq muhit va qat'iy tartibda qiynalishi mumkin.",
+    "ru": "Движим внутренними ценностями и стремлением к искренности. Сочувствующий и с богатым воображением, но может тяжело переносить жёсткую среду и строгую рутину.",
+    "en": "Driven by inner values and a desire to be genuine. Empathetic and imaginative, but may struggle in harsh environments and strict routines."
+   },
+   "str": {
+    "uz": [
+     "Hamdardlik",
+     "Ijodkorlik",
+     "Qadriyatlarga sodiqlik",
+     "Ochiq fikrlilik"
+    ],
+    "ru": [
+     "Эмпатия",
+     "Креативность",
+     "Верность ценностям",
+     "Открытость"
+    ],
+    "en": [
+     "Empathy",
+     "Creativity",
+     "Loyalty to values",
+     "Open-mindedness"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Haddan tashqari idealist",
+     "Nizodan qochadi",
+     "O'zini ko'p koyiydi",
+     "Ba'zan amaliy emas"
+    ],
+    "ru": [
+     "Излишне идеалистичен",
+     "Избегает конфликтов",
+     "Самокритичен",
+     "Порой непрактичен"
+    ],
+    "en": [
+     "Overly idealistic",
+     "Avoids conflict",
+     "Self-critical",
+     "Impractical at times"
+    ]
+   },
+   "work": {
+    "uz": "Ijodiy ish, yozish, dizayn va qadriyatlar muhim bo'lgan yordam ishlarida kuchli.",
+    "ru": "Силён в творческой работе, текстах, дизайне и помогающих ролях, где важны ценности.",
+    "en": "Strong in creative work, writing, design and helping roles where values matter."
+   },
+   "manage": {
+    "uz": "Vazifani ma'no bilan bog'lang; fikr-mulohazani yumshoq va yakkama-yakka ayting.",
+    "ru": "Связывайте задачи со смыслом; давайте обратную связь мягко и наедине.",
+    "en": "Connect tasks to meaning; give feedback gently and in private."
+   }
+  },
+  "ENFJ": {
+   "group": "NF",
+   "name": {
+    "uz": "Ilhomchi",
+    "ru": "Вдохновитель",
+    "en": "Inspirer"
+   },
+   "tag": {
+    "uz": "Boshqalardagi eng yaxshi tomonni ochadigan iliq, jozibali yetakchi.",
+    "ru": "Тёплый харизматичный лидер, раскрывающий лучшее в других.",
+    "en": "A warm, charismatic leader who brings out the best in others."
+   },
+   "about": {
+    "uz": "Odamlar orasida kuch oladi va ularni ruhlantirishni biladi. Tartibli va g'amxo'r, ko'pincha jamoani birlashtiruvchi bo'ladi.",
+    "ru": "Черпает энергию в людях и умеет их мотивировать. Организован и заботлив, часто становится тем, кто объединяет команду.",
+    "en": "Energized by people and skilled at motivating them. Organized and caring, often the one who brings the team together."
+   },
+   "str": {
+    "uz": [
+     "Jozibadorlik",
+     "Hamdardlik",
+     "Muloqot",
+     "Odamlarni tashkil qilish"
+    ],
+    "ru": [
+     "Харизма",
+     "Эмпатия",
+     "Коммуникация",
+     "Организация людей"
+    ],
+    "en": [
+     "Charisma",
+     "Empathy",
+     "Communication",
+     "Organizing people"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "O'zini haddan tashqari fido qiladi",
+     "Tanqidga ta'sirchan",
+     "Nazorat qilishga moyil",
+     "Ma'qullashga muhtoj"
+    ],
+    "ru": [
+     "Чрезмерная самоотдача",
+     "Чувствителен к критике",
+     "Склонен контролировать",
+     "Нуждается в одобрении"
+    ],
+    "en": [
+     "Overly self-sacrificing",
+     "Sensitive to criticism",
+     "Can be controlling",
+     "Seeks approval"
+    ]
+   },
+   "work": {
+    "uz": "Jamoani boshqarish, o'qitish, savdo, HR va mijozlar bilan ishlashda kuchli.",
+    "ru": "Силён в руководстве командой, обучении, продажах, HR и работе с клиентами.",
+    "en": "Strong in team leadership, training, sales, HR and client relationships."
+   },
+   "manage": {
+    "uz": "Hissasini tan oling; odamlar bilan bog'liq mas'uliyat bering.",
+    "ru": "Признавайте его вклад; давайте ответственность, связанную с людьми.",
+    "en": "Recognize their contribution; give them people-focused responsibility."
+   }
+  },
+  "ENFP": {
+   "group": "NF",
+   "name": {
+    "uz": "G'ayratli",
+    "ru": "Энтузиаст",
+    "en": "Enthusiast"
+   },
+   "tag": {
+    "uz": "Hamma bilan til topishadigan g'ayratli, tasavvurga boy erkin ruh.",
+    "ru": "Энергичный свободный дух с богатым воображением, находит общий язык со всеми.",
+    "en": "An energetic, imaginative free spirit who connects with everyone."
+   },
+   "about": {
+    "uz": "Qiziquvchan, dilkash va g'oyalarga to'la. Jamoaga kuch va ishtiyoq olib keladi, lekin takroriy ish va ishni oxiriga yetkazishda qiynalishi mumkin.",
+    "ru": "Любознателен, общителен и полон идей. Приносит энергию и энтузиазм, но может испытывать трудности с рутиной и доведением дел до конца.",
+    "en": "Curious, sociable and full of ideas. Brings energy and enthusiasm, but may struggle with routine and follow-through."
+   },
+   "str": {
+    "uz": [
+     "Ishtiyoq",
+     "Ijodkorlik",
+     "Dilkashlik",
+     "Optimizm"
+    ],
+    "ru": [
+     "Энтузиазм",
+     "Креативность",
+     "Общительность",
+     "Оптимизм"
+    ],
+    "en": [
+     "Enthusiasm",
+     "Creativity",
+     "Sociability",
+     "Optimism"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Tez chalg'iydi",
+     "Tartibsiz",
+     "Ko'p narsaga va'da beradi",
+     "Takroriy ishga qiziqishi so'nadi"
+    ],
+    "ru": [
+     "Легко отвлекается",
+     "Неорганизован",
+     "Берёт слишком много обязательств",
+     "Теряет интерес к рутине"
+    ],
+    "en": [
+     "Easily distracted",
+     "Disorganized",
+     "Overcommits",
+     "Loses interest in routine"
+    ]
+   },
+   "work": {
+    "uz": "Marketing, ijodiy ish, muloqot va yangi tashabbuslarni boshlashda kuchli.",
+    "ru": "Силён в маркетинге, творческой работе, коммуникациях и запуске новых инициатив.",
+    "en": "Strong in marketing, creative work, communication and launching new initiatives."
+   },
+   "manage": {
+    "uz": "Xilma-xillik va erkinlik bering; loyiha yo'ldan chiqmasligi uchun aniq nazorat nuqtalari qo'ying.",
+    "ru": "Давайте разнообразие и свободу; ставьте чёткие контрольные точки.",
+    "en": "Give variety and freedom; set clear checkpoints to keep projects on track."
+   }
+  },
+  "ISTJ": {
+   "group": "SJ",
+   "name": {
+    "uz": "Inspektor",
+    "ru": "Инспектор",
+    "en": "Inspector"
+   },
+   "tag": {
+    "uz": "Ishonchli, mas'uliyatli va aniq — ishni to'g'ri qiladi.",
+    "ru": "Надёжный, ответственный и точный — делает всё правильно.",
+    "en": "Reliable, responsible and precise — does things right."
+   },
+   "about": {
+    "uz": "Amaliy va burchga sodiq, tartib, qoida va va'dasiga vafo qilishni qadrlaydi. Detallarga e'tiborli va ishonchli, sinalgan usullarni afzal ko'radi.",
+    "ru": "Практичен и исполнителен, ценит порядок, правила и верность слову. Внимателен к деталям и надёжен, предпочитает проверенные методы.",
+    "en": "Practical and dutiful, values order, rules and keeping promises. Detail-oriented and dependable, prefers proven methods."
+   },
+   "str": {
+    "uz": [
+     "Ishonchlilik",
+     "Detallarga e'tibor",
+     "Mas'uliyat",
+     "Barqarorlik"
+    ],
+    "ru": [
+     "Надёжность",
+     "Внимание к деталям",
+     "Ответственность",
+     "Последовательность"
+    ],
+    "en": [
+     "Reliability",
+     "Attention to detail",
+     "Responsibility",
+     "Consistency"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "O'zgarishga qarshi",
+     "Qotib qolgan bo'lishi mumkin",
+     "Qo'pol ko'rinishi mumkin",
+     "Ishni boshqalarga topshirishni yoqtirmaydi"
+    ],
+    "ru": [
+     "Сопротивляется переменам",
+     "Может быть негибким",
+     "Прямолинеен",
+     "Неохотно делегирует"
+    ],
+    "en": [
+     "Resistant to change",
+     "Can be rigid",
+     "Blunt",
+     "Reluctant to delegate"
+    ]
+   },
+   "work": {
+    "uz": "Moliya, nazorat, operatsiyalar, sifat va aniqlik talab qiladigan ishlarda kuchli.",
+    "ru": "Силён в финансах, контроле, операциях, качестве и везде, где нужна точность.",
+    "en": "Strong in finance, control, operations, quality and anything that requires accuracy."
+   },
+   "manage": {
+    "uz": "Aniq tartib va talab bering; o'zgarishni sababi bilan va vaqt berib kiriting.",
+    "ru": "Давайте чёткие процедуры и требования; вводите изменения с объяснением и временем на адаптацию.",
+    "en": "Give clear procedures and expectations; introduce changes with reasons and time to adjust."
+   }
+  },
+  "ISFJ": {
+   "group": "SJ",
+   "name": {
+    "uz": "G'amxo'r",
+    "ru": "Опекун",
+    "en": "Caregiver"
+   },
+   "tag": {
+    "uz": "Boshqalarga jimgina g'amxo'rlik qiladigan iliq, sodiq inson.",
+    "ru": "Тёплый и преданный человек, который тихо заботится о других.",
+    "en": "A warm, loyal person who quietly takes care of others."
+   },
+   "about": {
+    "uz": "Boshqalarning ehtiyojiga e'tiborli, sodiq va mehnatkash. Odamlar haqidagi mayda narsalarni eslab qoladi, barqaror va ahil muhitni afzal ko'radi.",
+    "ru": "Внимателен к потребностям других, верен и трудолюбив. Помнит мелочи о людях, предпочитает стабильную и дружную обстановку.",
+    "en": "Attentive to others' needs, loyal and hardworking. Remembers small details about people and prefers stable, harmonious surroundings."
+   },
+   "str": {
+    "uz": [
+     "Qo'llab-quvvatlash",
+     "Ishonchlilik",
+     "Sabr",
+     "Detallarga e'tibor"
+    ],
+    "ru": [
+     "Поддержка",
+     "Надёжность",
+     "Терпение",
+     "Внимание к деталям"
+    ],
+    "en": [
+     "Supportiveness",
+     "Reliability",
+     "Patience",
+     "Attention to detail"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "«Yo'q» deyish qiyin",
+     "Nizodan qochadi",
+     "O'zini past baholaydi",
+     "O'zgarishga qarshi"
+    ],
+    "ru": [
+     "Трудно отказать",
+     "Избегает конфликтов",
+     "Недооценивает себя",
+     "Сопротивляется переменам"
+    ],
+    "en": [
+     "Finds it hard to say no",
+     "Avoids conflict",
+     "Undervalues self",
+     "Resistant to change"
+    ]
+   },
+   "work": {
+    "uz": "Yordamchi rollar, ma'muriy ish, parvarish, mijozlarga xizmat va jamoaviy ishlarda kuchli.",
+    "ru": "Силён в поддерживающих ролях, администрировании, заботе, клиентском сервисе и командной работе.",
+    "en": "Strong in support roles, administration, care, customer service and teamwork."
+   },
+   "manage": {
+    "uz": "Jimgina qilgan mehnatini qadrlang; ish yuki haqida o'zingiz so'rang — u kamdan-kam shikoyat qiladi.",
+    "ru": "Цените его тихий труд; сами спрашивайте о нагрузке — он редко жалуется.",
+    "en": "Appreciate their quiet work; ask about their workload yourself — they rarely complain."
+   }
+  },
+  "ESTJ": {
+   "group": "SJ",
+   "name": {
+    "uz": "Boshqaruvchi",
+    "ru": "Администратор",
+    "en": "Supervisor"
+   },
+   "tag": {
+    "uz": "Ishlarni yurgizib turadigan tartibli, qat'iyatli rahbar.",
+    "ru": "Организованный, решительный руководитель, на котором всё держится.",
+    "en": "An organized, decisive manager who keeps things running."
+   },
+   "about": {
+    "uz": "Tartib, qoida va natijani qadrlaydi. Boshqaruvni qo'lga oladi, jarayonlarni tashkil qiladi va boshqalardan ham va'dasiga amal qilishni kutadi.",
+    "ru": "Ценит порядок, правила и результат. Берёт управление на себя, выстраивает процессы и ожидает от других выполнения обязательств.",
+    "en": "Values order, rules and results. Takes charge, organizes processes and expects others to keep their commitments."
+   },
+   "str": {
+    "uz": [
+     "Tashkilotchilik",
+     "Qat'iyat",
+     "Ishonchlilik",
+     "Aniq muloqot"
+    ],
+    "ru": [
+     "Организованность",
+     "Решительность",
+     "Надёжность",
+     "Ясная коммуникация"
+    ],
+    "en": [
+     "Organization",
+     "Decisiveness",
+     "Dependability",
+     "Clear communication"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Moslashuvchan emas",
+     "Buyruqbozlikka moyil",
+     "Samarasizlikka sabrsiz",
+     "His-tuyg'uni kam hisobga oladi"
+    ],
+    "ru": [
+     "Негибкость",
+     "Склонен командовать",
+     "Нетерпим к неэффективности",
+     "Мало учитывает чувства"
+    ],
+    "en": [
+     "Inflexible",
+     "Can be bossy",
+     "Impatient with inefficiency",
+     "Pays little attention to feelings"
+    ]
+   },
+   "work": {
+    "uz": "Boshqaruv, operatsiyalar, ma'muriy ish va ishlab chiqarish nazoratida kuchli.",
+    "ru": "Силён в управлении, операциях, администрировании и контроле производства.",
+    "en": "Strong in management, operations, administration and production control."
+   },
+   "manage": {
+    "uz": "To'g'ri gapiring, so'zingizda turing va natija ko'rsating; aniq qoidalar bilan vakolat bering.",
+    "ru": "Говорите прямо, держите слово и показывайте результат; давайте полномочия с чёткими правилами.",
+    "en": "Be direct, keep your word and show results; give authority with clear rules."
+   }
+  },
+  "ESFJ": {
+   "group": "SJ",
+   "name": {
+    "uz": "Mezbon",
+    "ru": "Радушный",
+    "en": "Host"
+   },
+   "tag": {
+    "uz": "Jamoani birlashtirib turadigan g'amxo'r, dilkash yordamchi.",
+    "ru": "Заботливый общительный помощник, который сплачивает команду.",
+    "en": "A caring, sociable helper who holds the team together."
+   },
+   "about": {
+    "uz": "Iliq, amaliy va odamlarga nima kerakligini sezadi. Yordam berishni yoqtiradi, ahillik va an'analarni qadrlaydi, juda ishonchli.",
+    "ru": "Тёплый, практичный и чуткий к тому, что нужно людям. Любит помогать, ценит гармонию и традиции, очень надёжен.",
+    "en": "Warm, practical and quick to notice what people need. Enjoys helping, values harmony and tradition, and is very reliable."
+   },
+   "str": {
+    "uz": [
+     "G'amxo'rlik",
+     "Dilkashlik",
+     "Ishonchlilik",
+     "Amaliy yordam"
+    ],
+    "ru": [
+     "Заботливость",
+     "Общительность",
+     "Надёжность",
+     "Практическая помощь"
+    ],
+    "en": [
+     "Caring",
+     "Sociability",
+     "Reliability",
+     "Practical help"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Ma'qullashga muhtoj",
+     "Tanqidga ta'sirchan",
+     "Nizodan qochadi",
+     "Boshqalar ishiga ortiqcha aralashishi mumkin"
+    ],
+    "ru": [
+     "Нуждается в одобрении",
+     "Чувствителен к критике",
+     "Избегает конфликтов",
+     "Может излишне вмешиваться в чужие дела"
+    ],
+    "en": [
+     "Needs approval",
+     "Sensitive to criticism",
+     "Avoids conflict",
+     "May get too involved in others' affairs"
+    ]
+   },
+   "work": {
+    "uz": "Mijozlarga xizmat, HR, ma'muriy ish, mehmondo'stlik va jamoani muvofiqlashtirishda kuchli.",
+    "ru": "Силён в клиентском сервисе, HR, администрировании, гостеприимстве и координации команды.",
+    "en": "Strong in customer service, HR, administration, hospitality and team coordination."
+   },
+   "manage": {
+    "uz": "Iliq e'tirof va do'stona muhit bering; talablarni aniq ayting.",
+    "ru": "Давайте тёплое признание и дружескую атмосферу; чётко формулируйте ожидания.",
+    "en": "Give warm recognition and a friendly environment; state expectations clearly."
+   }
+  },
+  "ISTP": {
+   "group": "SP",
+   "name": {
+    "uz": "Usta",
+    "ru": "Мастер",
+    "en": "Craftsman"
+   },
+   "tag": {
+    "uz": "Qilib o'rganadigan xotirjam, amaliy muammo yechuvchi.",
+    "ru": "Спокойный практик, который решает задачи и учится на деле.",
+    "en": "A calm, practical problem-solver who learns by doing."
+   },
+   "about": {
+    "uz": "Qo'li gul va mantiqli, asbob va tizimlar bilan yaxshi ishlaydi. Qiyin vaziyatda xotirjam qoladi, gapdan ko'ra ishni afzal ko'radi, erkinlikni qadrlaydi.",
+    "ru": "Руки на месте, логика в голове, хорошо обращается с инструментами и системами. Сохраняет спокойствие в кризис, предпочитает дело словам и ценит свободу.",
+    "en": "Hands-on and logical, good with tools and systems. Stays calm in a crisis, prefers action to talk and values freedom."
+   },
+   "str": {
+    "uz": [
+     "Amaliy mahorat",
+     "Qiyin vaziyatda xotirjamlik",
+     "Mantiqiylik",
+     "Moslashuvchanlik"
+    ],
+    "ru": [
+     "Практические навыки",
+     "Спокойствие в кризис",
+     "Логичность",
+     "Гибкость"
+    ],
+    "en": [
+     "Practical skills",
+     "Calm in a crisis",
+     "Logical",
+     "Flexible"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Ichidagini kam aytadi",
+     "Tez zerikadi",
+     "Tavakkalga moyil",
+     "Uzoq muddatli majburiyatdan qochadi"
+    ],
+    "ru": [
+     "Замкнут",
+     "Быстро скучает",
+     "Склонен к риску",
+     "Избегает долгих обязательств"
+    ],
+    "en": [
+     "Keeps thoughts to self",
+     "Easily bored",
+     "Takes risks",
+     "Avoids long-term commitments"
+    ]
+   },
+   "work": {
+    "uz": "Texnik ish, ishlab chiqarish, ta'mirlash, montaj va nosozlikni topishda kuchli.",
+    "ru": "Силён в технической работе, производстве, ремонте, монтаже и поиске неисправностей.",
+    "en": "Strong in technical work, production, repair, installation and troubleshooting."
+   },
+   "manage": {
+    "uz": "Haqiqiy masala va erkinlik bering; har qadamini nazorat qilmang, uzoq yig'ilishlardan saqlang.",
+    "ru": "Давайте реальные задачи и свободу; избегайте микроменеджмента и долгих совещаний.",
+    "en": "Give real problems and freedom; avoid micromanaging and long meetings."
+   }
+  },
+  "ISFP": {
+   "group": "SP",
+   "name": {
+    "uz": "Rassom",
+    "ru": "Художник",
+    "en": "Artist"
+   },
+   "tag": {
+    "uz": "Kamgap, ta'sirchan va ijodkor — shu lahza bilan yashaydi.",
+    "ru": "Тихий, чувствительный и творческий — живёт настоящим.",
+    "en": "Quiet, sensitive and creative — lives in the moment."
+   },
+   "about": {
+    "uz": "Muloyim, kuzatuvchan va go'zallikni nozik sezadi. O'zini so'zdan ko'ra ish va ijod orqali ifodalaydi, shaxsiy erkinlikni qadrlaydi.",
+    "ru": "Мягкий, наблюдательный, с тонким чувством прекрасного. Выражает себя делами и творчеством, а не словами, ценит личную свободу.",
+    "en": "Gentle, observant and with a fine sense of beauty. Expresses themselves through actions and creative work rather than words, and values personal freedom."
+   },
+   "str": {
+    "uz": [
+     "Ijodkorlik",
+     "Nozik his",
+     "Moslashuvchanlik",
+     "Mehribonlik"
+    ],
+    "ru": [
+     "Креативность",
+     "Чуткость",
+     "Гибкость",
+     "Доброта"
+    ],
+    "en": [
+     "Creativity",
+     "Sensitivity",
+     "Flexibility",
+     "Kindness"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Nizodan qochadi",
+     "Rejalashtirishni yoqtirmaydi",
+     "Stressga tez beriladi",
+     "Nima o'ylayotganini bilish qiyin"
+    ],
+    "ru": [
+     "Избегает конфликтов",
+     "Не любит планировать",
+     "Легко поддаётся стрессу",
+     "Трудно понять, что он думает"
+    ],
+    "en": [
+     "Avoids conflict",
+     "Dislikes planning",
+     "Stressed easily",
+     "Hard to read"
+    ]
+   },
+   "work": {
+    "uz": "Dizayn, hunarmandchilik, vizual ish va qo'l bilan ijod qilinadigan rollarda kuchli.",
+    "ru": "Силён в дизайне, ремёслах, визуальной работе и ролях с практическим творчеством.",
+    "en": "Strong in design, crafts, visual work and roles with hands-on creativity."
+   },
+   "manage": {
+    "uz": "Ijodiy erkinlik va tinch muhit bering; fikr-mulohazani yakkama-yakka va yumshoq ayting.",
+    "ru": "Дайте творческую свободу и спокойную среду; обратную связь — наедине и мягко.",
+    "en": "Give creative freedom and a calm setting; give feedback privately and gently."
+   }
+  },
+  "ESTP": {
+   "group": "SP",
+   "name": {
+    "uz": "Harakatchi",
+    "ru": "Деятель",
+    "en": "Doer"
+   },
+   "tag": {
+    "uz": "G'ayratli, dadil va amaliy — avval qiladi, keyin gapiradi.",
+    "ru": "Энергичный, смелый и практичный — сначала делает, потом говорит.",
+    "en": "Energetic, bold and practical — acts first, talks later."
+   },
+   "about": {
+    "uz": "Harakatga yo'nalgan, dilkash va imkoniyatni tez ilg'aydi. Bosimga yaxshi chidaydi, nazariyadan ko'ra amaliy natijani afzal ko'radi.",
+    "ru": "Ориентирован на действие, общителен и быстро ловит возможности. Хорошо переносит давление, предпочитает практический результат теории.",
+    "en": "Action-oriented, sociable and quick to spot opportunities. Handles pressure well and prefers practical results over theory."
+   },
+   "str": {
+    "uz": [
+     "G'ayrat",
+     "Tez qaror",
+     "Amaliylik",
+     "Ishontira olish"
+    ],
+    "ru": [
+     "Энергия",
+     "Быстрые решения",
+     "Практичность",
+     "Убедительность"
+    ],
+    "en": [
+     "Energy",
+     "Quick decisions",
+     "Practicality",
+     "Persuasiveness"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Sabrsiz",
+     "Tavakkalga moyil",
+     "Qoidalarni yoqtirmaydi",
+     "Asosan yaqin kelajakka qaraydi"
+    ],
+    "ru": [
+     "Нетерпелив",
+     "Склонен к риску",
+     "Не любит правила",
+     "Смотрит в основном на ближайшую перспективу"
+    ],
+    "en": [
+     "Impatient",
+     "Takes risks",
+     "Dislikes rules",
+     "Short-term focus"
+    ]
+   },
+   "work": {
+    "uz": "Savdo, muzokaralar, dala ishlari va tez o'zgaruvchan vaziyatlarda kuchli.",
+    "ru": "Силён в продажах, переговорах, выездной работе и быстро меняющихся ситуациях.",
+    "en": "Strong in sales, negotiations, field work and fast-moving situations."
+   },
+   "manage": {
+    "uz": "Qiyin vazifa va tez natija bering; ko'rsatmani qisqa va amaliy qiling.",
+    "ru": "Давайте вызовы и быстрые победы; инструкции — коротко и по делу.",
+    "en": "Give challenges and quick wins; keep instructions short and practical."
+   }
+  },
+  "ESFP": {
+   "group": "SP",
+   "name": {
+    "uz": "Davra ruhi",
+    "ru": "Душа компании",
+    "en": "Performer"
+   },
+   "tag": {
+    "uz": "Hayotsevar, quvnoq va iliq — har ishni qiziqarli qiladi.",
+    "ru": "Спонтанный, весёлый и тёплый — с ним всё интереснее.",
+    "en": "Spontaneous, cheerful and warm — makes everything more fun."
+   },
+   "about": {
+    "uz": "Ochiq, quvnoq va odamlarga yo'nalgan. Ijobiy kayfiyat olib keladi, lahzadan zavq oladi va odamlar bilan oson til topishadi.",
+    "ru": "Открытый, жизнерадостный и ориентированный на людей. Приносит позитив, наслаждается моментом и легко находит общий язык.",
+    "en": "Outgoing, fun-loving and people-oriented. Brings positive energy, enjoys the moment and connects with people easily."
+   },
+   "str": {
+    "uz": [
+     "Ijobiylik",
+     "Dilkashlik",
+     "Amaliy yordam",
+     "Moslashuvchanlik"
+    ],
+    "ru": [
+     "Позитив",
+     "Общительность",
+     "Практическая помощь",
+     "Гибкость"
+    ],
+    "en": [
+     "Positivity",
+     "Sociability",
+     "Practical help",
+     "Adaptability"
+    ]
+   },
+   "weak": {
+    "uz": [
+     "Tez zerikadi",
+     "Uzoq rejalashtirishdan qochadi",
+     "Tanqidga ta'sirchan",
+     "Tez chalg'iydi"
+    ],
+    "ru": [
+     "Быстро скучает",
+     "Избегает долгосрочного планирования",
+     "Чувствителен к критике",
+     "Легко отвлекается"
+    ],
+    "en": [
+     "Easily bored",
+     "Avoids long-term planning",
+     "Sensitive to criticism",
+     "Easily distracted"
+    ]
+   },
+   "work": {
+    "uz": "Mijozlarga xizmat, savdo, tadbirlar va odamlar bilan jonli muloqot bo'ladigan ishlarda kuchli.",
+    "ru": "Силён в клиентском сервисе, продажах, мероприятиях и работе с живым общением.",
+    "en": "Strong in customer service, sales, events and any role with lively contact with people."
+   },
+   "manage": {
+    "uz": "Ishni xilma-xil va jamoaviy qiling; qisqa muddat qo'yib, natijani nishonlang.",
+    "ru": "Делайте работу разнообразной и командной; ставьте короткие сроки и отмечайте результаты.",
+    "en": "Keep the work varied and social; set short deadlines and celebrate results."
+   }
+  }
+ },
+ "groups": {
+  "NT": {
+   "uz": "Mantiqchilar",
+   "ru": "Логики",
+   "en": "Rationals",
+   "color": "#8a5fa3"
+  },
+  "NF": {
+   "uz": "Qadriyatchilar",
+   "ru": "Идеалисты",
+   "en": "Idealists",
+   "color": "#2f9e6e"
+  },
+  "SJ": {
+   "uz": "Tartib posbonlari",
+   "ru": "Хранители порядка",
+   "en": "Keepers",
+   "color": "#3d8fb0"
+  },
+  "SP": {
+   "uz": "Amaliyotchilar",
+   "ru": "Практики",
+   "en": "Doers",
+   "color": "#e0a930"
+  }
+ },
+ "identity": {
+  "A": {
+   "uz": "«-A» (o'ziga ishongan) varianti: bosim ostida xotirjam, o'z qaroriga ishonadi, xatolar ustida uzoq qayg'urmaydi. E'tibor berish kerak: ba'zan o'z kamchiliklarini sezmay qolishi mumkin.",
+   "ru": "Вариант «-A» (уверенный): спокоен под давлением, доверяет своим решениям, не зацикливается на ошибках. Обратить внимание: иногда может не замечать собственных недостатков.",
+   "en": "The \"-A\" (assured) variant: calm under pressure, trusts own decisions, doesn't dwell on mistakes. Watch out: may sometimes overlook own shortcomings."
+  },
+  "T": {
+   "uz": "«-T» (ta'sirchan) varianti: o'ziga talabchan, natijani doim yaxshilashga intiladi, tanqidni jiddiy qabul qiladi. E'tibor berish kerak: stress va o'zini koyish ko'p bo'lishi mumkin.",
+   "ru": "Вариант «-T» (чувствительный): требователен к себе, постоянно стремится улучшить результат, серьёзно воспринимает критику. Обратить внимание: может испытывать много стресса и самокритики.",
+   "en": "The \"-T\" (tense) variant: demanding of self, always pushing to improve, takes criticism seriously. Watch out: may experience a lot of stress and self-criticism."
+  }
+ },
+ "ui": {
+  "uz": {
+   "title": "Shaxsiyat testi",
+   "sub": "60 ta fikr · taxminan 10–12 daqiqa",
+   "intro": [
+    "Har bir fikrga qanchalik rozi ekaningizni belgilang.",
+    "To'g'ri yoki noto'g'ri javob yo'q — o'zingizga qanday bo'lishini emas, aslida qandayligingizni belgilang.",
+    "Iloji boricha o'rtadagi (betaraf) javobdan qoching va uzoq o'ylab o'tirmang."
+   ],
+   "name": "Ismingiz",
+   "start": "Testni boshlash",
+   "agree": "Roziman",
+   "disagree": "Rozi emasman",
+   "page": "Sahifa",
+   "of": "/",
+   "next": "Keyingi",
+   "back": "Orqaga",
+   "finish": "Natijani ko'rish",
+   "need": "Davom etish uchun shu sahifadagi barcha fikrlarga javob bering.",
+   "yourtype": "Sizning shaxsiyat tipingiz",
+   "scales": "Shaxsiyat shkalalari",
+   "hint": "Batafsil izoh uchun shkalani bosing.",
+   "about": "Siz haqingizda",
+   "str": "Kuchli tomonlaringiz",
+   "weak": "E'tibor berish kerak",
+   "work": "Ishda",
+   "manage": "Siz bilan qanday ishlash kerak",
+   "ident": "Kodingizdagi oxirgi harf",
+   "letters": "Kodingiz nimani anglatadi",
+   "border": "Bu shkalada siz ikki qutb o'rtasidasiz — ikkala tomonning xususiyatlari sizda ham bor.",
+   "disc": "Bu test shaxsiyat uslubini ko'rsatadi: qobiliyat, bilim yoki qanchalik yaxshi hodim ekaningizni emas. Barcha tiplarning o'z kuchli tomonlari bor.",
+   "src": "Test Big Five shaxsiyat modeli va IPIP ochiq savollar bazasi asosida tuzilgan.",
+   "again": "Qayta topshirish",
+   "raw": "Natija (platforma uchun)",
+   "lang": "Til"
+  },
+  "ru": {
+   "title": "Тест на тип личности",
+   "sub": "60 утверждений · около 10–12 минут",
+   "intro": [
+    "Отметьте, насколько вы согласны с каждым утверждением.",
+    "Правильных и неправильных ответов нет — отвечайте так, как есть на самом деле, а не как хотелось бы.",
+    "По возможности избегайте нейтрального ответа и не раздумывайте слишком долго."
+   ],
+   "name": "Ваше имя",
+   "start": "Начать тест",
+   "agree": "Согласен",
+   "disagree": "Не согласен",
+   "page": "Страница",
+   "of": "/",
+   "next": "Далее",
+   "back": "Назад",
+   "finish": "Посмотреть результат",
+   "need": "Чтобы продолжить, ответьте на все утверждения на этой странице.",
+   "yourtype": "Ваш тип личности",
+   "scales": "Шкалы личности",
+   "hint": "Нажмите на шкалу, чтобы увидеть пояснение.",
+   "about": "О вас",
+   "str": "Ваши сильные стороны",
+   "weak": "На что обратить внимание",
+   "work": "В работе",
+   "manage": "Как с вами работать",
+   "ident": "Последняя буква вашего кода",
+   "letters": "Что означает ваш код",
+   "border": "По этой шкале вы находитесь между полюсами — у вас есть черты обеих сторон.",
+   "disc": "Тест показывает стиль личности, а не способности, знания или то, насколько вы хороший сотрудник. У каждого типа есть свои сильные стороны.",
+   "src": "Тест составлен на основе модели личности «Большая пятёрка» и открытой базы вопросов IPIP.",
+   "again": "Пройти заново",
+   "raw": "Результат (для платформы)",
+   "lang": "Язык"
+  },
+  "en": {
+   "title": "Personality Test",
+   "sub": "60 statements · about 10–12 minutes",
+   "intro": [
+    "Mark how much you agree with each statement.",
+    "There are no right or wrong answers — answer as you really are, not as you'd like to be.",
+    "Try to avoid the neutral answer and don't overthink."
+   ],
+   "name": "Your name",
+   "start": "Start the test",
+   "agree": "Agree",
+   "disagree": "Disagree",
+   "page": "Page",
+   "of": "/",
+   "next": "Next",
+   "back": "Back",
+   "finish": "See my results",
+   "need": "Please answer every statement on this page to continue.",
+   "yourtype": "Your personality type",
+   "scales": "Your personality traits",
+   "hint": "Tap a trait to see what it means.",
+   "about": "About you",
+   "str": "Your strengths",
+   "weak": "Things to watch",
+   "work": "At work",
+   "manage": "How to work with you",
+   "ident": "The last letter of your code",
+   "letters": "What your code means",
+   "border": "You are close to the middle on this trait — you share qualities of both sides.",
+   "disc": "This test describes personality style — not ability, knowledge or how good an employee you are. Every type has its own strengths.",
+   "src": "Based on the Big Five personality model and the public-domain IPIP item pool.",
+   "again": "Retake the test",
+   "raw": "Result (for the platform)",
+   "lang": "Language"
+  }
+ }
+}
