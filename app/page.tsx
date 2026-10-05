@@ -581,8 +581,9 @@ export default function App(){
       return arr;
     });
     setShuffles(newShuffles);
-    // Timer: 40 min for the long "Umumiy", 20 min for IQ/Personality, 15 min for Farosat and the rest.
-    const durSec = sel==="umumiy" ? 40*60 : sel==="iq" ? 20*60 : sel==="personality" ? 20*60 : sel==="personal" ? 15*60 : 15*60;
+    // Timer: 40 min for the long "Umumiy", 20 min for IQ, 15 min for Farosat and the rest.
+    // Personality (shaxsiyat): no timer — user picks `0` which the countdown effect treats as "off".
+    const durSec = sel==="umumiy" ? 40*60 : sel==="iq" ? 20*60 : sel==="personality" ? 0 : sel==="personal" ? 15*60 : 15*60;
     setTimeLeft(durSec);
     setCand({name,surname});setAnswers({});setCur(0);setScore(null);
     nav(()=>setPage("test"));
@@ -1049,24 +1050,29 @@ export default function App(){
         <div style={{background:"#16a34a",color:"#fff",borderRadius:24,padding:"10px 22px",fontWeight:700,fontSize:14,boxShadow:"0 4px 20px rgba(22,163,74,.45)",whiteSpace:"nowrap",transform:"translateX(-50%)"}}>{toast}</div>
       </div>
       {renderHeader(`${cand.name} ${cand.surname} · ${attempt} ${t.test.att}`)}
-      {/* Compact timer — fixed at bottom so it's always visible while scrolling */}
+      {/* Compact timer — fixed at bottom so it's always visible while scrolling. Hidden for
+          personality test (no timer); still shows the question counter in that case. */}
       <div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:95,pointerEvents:"none",padding:"8px 12px 12px",background:"linear-gradient(to top, rgba(249,250,251,.97) 65%, transparent)",display:"flex",justifyContent:"center"}}>
         <div style={{pointerEvents:"auto",display:"inline-flex",alignItems:"center",gap:10,background:timerLow?"#fef2f2":"#fff",border:`1px solid ${timerLow?"#fecaca":"#e5e7eb"}`,borderRadius:999,padding:"7px 14px",boxShadow:"0 2px 14px rgba(0,0,0,.1)",fontSize:12,fontWeight:600,color:"#6b7280"}}>
-          <span style={{fontWeight:800,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",fontSize:13.5}}>⏱ {timerDisp}</span>
-          <span style={{width:1,height:12,background:"#e5e7eb"}}/>
+          {!isPersonality && <>
+            <span style={{fontWeight:800,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",fontSize:13.5}}>⏱ {timerDisp}</span>
+            <span style={{width:1,height:12,background:"#e5e7eb"}}/>
+          </>}
           <span>📝 <span style={{color:"#111827",fontWeight:700}}>{answered}</span>/{qs.length}</span>
           <span style={{width:1,height:12,background:"#e5e7eb"}}/>
           <span>{t.test.q} <span style={{color:"#16a34a",fontWeight:700}}>{cur+1}</span>/{qs.length}</span>
         </div>
       </div>
       <div style={{maxWidth:680,margin:"0 auto",padding:"20px 16px 76px"}}>
-        {/* Timer */}
-        <div className="card card-p au" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",background:timerLow?"#fef2f2":"#fff",borderColor:timerLow?"#fecaca":"#e5e7eb"}}>
-          <div style={{fontSize:13,fontWeight:600,color:"#6b7280"}}>{L("Qolgan vaqt","Осталось","Time left")}</div>
-          <div style={{fontSize:22,fontWeight:900,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",letterSpacing:".02em"}}>
-            ⏱ {timerDisp}
+        {/* Timer card — hidden entirely for personality test. */}
+        {!isPersonality && (
+          <div className="card card-p au" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",background:timerLow?"#fef2f2":"#fff",borderColor:timerLow?"#fecaca":"#e5e7eb"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#6b7280"}}>{L("Qolgan vaqt","Осталось","Time left")}</div>
+            <div style={{fontSize:22,fontWeight:900,color:timerLow?"#dc2626":"#111827",fontVariantNumeric:"tabular-nums",letterSpacing:".02em"}}>
+              ⏱ {timerDisp}
+            </div>
           </div>
-        </div>
+        )}
         {/* Progress card */}
         <div className="card card-p au" style={{marginBottom:14}}>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280",marginBottom:10,fontWeight:500}}>
@@ -1438,11 +1444,15 @@ export default function App(){
           // the raw answers map — we don't store itemId→picked for personality separately, so rely on meta.
           const persRes:PersonalityResult|null = isPersonalityEval ? (m.personality || null) : null;
           const persType = persRes ? PERSONALITY_DATA.types[persRes.tip] : null;
+          // Personality is a working-style snapshot, not a hiring verdict — the banner shows
+          // only the code and type tag, no hire/no-hire text.
           const rec = isPersonalityEval
-            ? { verdict:"ISHGA_OLISH_MUMKIN" as const, color:"green" as const, reason:{uz:"Shaxsiyat testi ishga olish qarori uchun emas — uslubni tushunish uchun.",ru:"Личностный тест не для найма — для понимания стиля.",en:"Personality test is not a hiring signal — it's a working-style map."} }
+            ? { verdict:"ISHGA_OLISH_MUMKIN" as const, color:"green" as const, reason:{uz:"",ru:"",en:""} }
             : combinedRecommendation(iqRes, pRes, isIqEval ? evalRole : null);
           const langE = lang as EvalLang;
-          const recTxt = pickMl(rec.reason);
+          const recTxt = isPersonalityEval
+            ? (persType ? pickMl(persType.tag) : "")
+            : pickMl(rec.reason);
           const verdictTxt = isPersonalityEval && persRes ? persRes.kod : (lang==="uz-cyrl" ? toCyrl(verdictLabel(rec.verdict,"uz")) : verdictLabel(rec.verdict, langE));
           const recBg = rec.color==="green" ? "#f0fdf4" : rec.color==="yellow" ? "#fefce8" : "#fef2f2";
           const recBd = rec.color==="green" ? "#86efac" : rec.color==="yellow" ? "#fde68a" : "#fecaca";
