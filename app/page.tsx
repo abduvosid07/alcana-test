@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { listSectionsWithQuestions, type DbSection, type DbQuestion } from "../lib/quizApi";
-import { QS_IQ, QS_PERSONAL, personalMaxPts, XISLAT_NAMES, RED_FLAG_IDS, type IqQ, type SjtQ, type PersonalModule, type Ml } from "../lib/newQuestions";
+import { QS_PERSONAL, personalMaxPts, XISLAT_NAMES, RED_FLAG_IDS, type SjtQ, type PersonalModule, type Ml } from "../lib/newQuestions";
+import { IQ_DATA, baholashIQ } from "../lib/iqScoring";
 import { evaluateIq, evaluatePersonal, combinedRecommendation, verdictLabel, EVAL_CONFIG, type Lang as EvalLang } from "../lib/evaluation";
 import { PERSONALITY_DATA, baholashShaxsiyat, type PersonalityResult } from "../lib/personalityScoring";
 import AdminQuestions from "../components/AdminQuestions";
@@ -557,7 +558,7 @@ export default function App(){
     else if(sel==="alcana") raw = QS_ALCANA;
     else if(sel==="umumiy") raw = [...QS_UMUMIY, ...QS_ALCANA];
     else if(sel==="amocrm") raw = QS_AMOCRM;
-    else if(sel==="iq") raw = QS_IQ;
+    else if(sel==="iq") raw = IQ_DATA.savollar.map(it=>({opts:it.variantlar}));
     else if(sel==="personal"){
       // Farosat test (SJT) = mandatory core (Umumiy, 10 qs) + picked position module (6 qs). Total 16.
       const core = QS_PERSONAL.find(m=>m.key==="core");
@@ -612,7 +613,7 @@ export default function App(){
       : selectedSection==="alcana" ? QS_ALCANA
       : selectedSection==="umumiy" ? [...QS_UMUMIY, ...QS_ALCANA]
       : selectedSection==="amocrm" ? QS_AMOCRM
-      : isIq ? QS_IQ
+      : isIq ? IQ_DATA.savollar.map(it=>({ans:it.togri, opts:it.variantlar}))
       : isPersonal ? [...(personalCoreMod?.qs||[]), ...(personalPosMod?.qs||[])]
       : isPersonality ? PERSONALITY_DATA.items.map(it=>({itemId:it.id, opts:[0,1,2,3,4,5,6]}))
       : (QS[lang] || QS.uz || []);
@@ -797,7 +798,16 @@ export default function App(){
     if(selectedSection==="alcana") return mapMlQs(QS_ALCANA);
     if(selectedSection==="umumiy") return mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);
     if(selectedSection==="amocrm") return mapMlQs(QS_AMOCRM);
-    if(isIq) return QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}));
+    if(isIq) {
+      // New IQ test is Uzbek-only. For non-uz languages we fall back to the uz text (translations
+      // not provided in the data file); uz-cyrl auto-derives via toCyrl.
+      return IQ_DATA.savollar.map(it=>({
+        q: lang==="uz-cyrl" ? toCyrl(it.savol) : it.savol,
+        opts: it.variantlar.map(v=> lang==="uz-cyrl" ? toCyrl(v) : v),
+        ans: it.togri,
+        svg: it.rasm_svg,
+      }));
+    }
     if(isPersonal){
       const combined = [...(personalCoreModule?.qs||[]), ...(personalPosModule?.qs||[])];
       return combined.map(sq=>({q:pickMl(sq.q),opts:sq.opts.map(o=>pickMl(o.t)),__personal:true}));
@@ -970,7 +980,7 @@ export default function App(){
                 <span style={{fontWeight:900,fontSize:17,color:"#111827"}}>IQ test</span>
               </div>
               <div style={{fontSize:13,color:"#6b7280",marginBottom:10,lineHeight:1.5}}>{L("Mantiq, sonli mulohaza, fazoviy va diqqat","Логика, счёт, пространство, внимание","Logic, numeric, spatial & attention")}</div>
-              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>30 {L("savol","вопросов","questions")} · 20 {L("daqiqa","минут","min")}</div>
+              <div style={{fontSize:12.5,color:"#374151",fontWeight:600}}>50 {L("savol","вопросов","questions")} · 20 {L("daqiqa","минут","min")}</div>
             </button>
           );})()}
           {/* Hardcoded section 5: Personal (SJT) test — dropdown for module */}
@@ -1483,14 +1493,27 @@ export default function App(){
                 </div>
 
                 {/* IQ block */}
-                {iqRes && (
+                {iqRes && (() => {
+                  const bandBg = iqRes.band.rang==="yashil"?"#f0fdf4":iqRes.band.rang==="sariq"?"#fefce8":"#fef2f2";
+                  const bandFg = iqRes.band.rang==="yashil"?"#166534":iqRes.band.rang==="sariq"?"#92400e":"#991b1b";
+                  const bandBd = iqRes.band.rang==="yashil"?"#bbf7d0":iqRes.band.rang==="sariq"?"#fde68a":"#fecaca";
+                  const bandIzoh = lang==="ru" ? iqRes.band.izoh_ru : lang==="en" ? iqRes.band.izoh_en : (lang==="uz-cyrl" ? toCyrl(iqRes.band.izoh_uz) : iqRes.band.izoh_uz);
+                  return (
                   <div style={{marginBottom:20}}>
                     <div style={{fontSize:13,fontWeight:800,color:"#111827",marginBottom:10,letterSpacing:".02em"}}>🧠 {L("Aqliy salohiyat","Умственный потенциал","Cognitive")}</div>
-                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
-                      <div style={{display:"flex",justifyContent:"space-between",fontSize:13.5,marginBottom:8}}>
-                        <span style={{color:"#6b7280"}}>{L("Umumiy ball","Общий балл","Overall")}</span>
-                        <span style={{fontWeight:800,color:iqRes.taqiq?"#991b1b":"#111827"}}>{iqRes.togri}/{iqRes.jami} ({iqRes.umumiyPct}%) — {iqRes.umumiyBand}</span>
+                    {/* IQ score banner with color band */}
+                    <div style={{padding:16,background:bandBg,border:`2px solid ${bandBd}`,borderRadius:12,marginBottom:12,display:"flex",alignItems:"center",gap:16}}>
+                      <div style={{textAlign:"center",flexShrink:0}}>
+                        <div style={{fontSize:11,fontWeight:700,color:bandFg,letterSpacing:".08em",opacity:.75}}>IQ</div>
+                        <div style={{fontSize:40,fontWeight:900,color:bandFg,letterSpacing:"-.03em",lineHeight:1}}>{iqRes.iq}</div>
                       </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:15,fontWeight:800,color:bandFg,marginBottom:2}}>{iqRes.band.nom}</div>
+                        <div style={{fontSize:12.5,color:bandFg,lineHeight:1.5,opacity:.9}}>{bandIzoh}</div>
+                        <div style={{fontSize:11.5,color:bandFg,marginTop:4,opacity:.7}}>{iqRes.togri}/{iqRes.jami} ({iqRes.umumiyPct}%)</div>
+                      </div>
+                    </div>
+                    <div style={{padding:14,background:"#f9fafb",borderRadius:10,border:"1px solid #e5e7eb",marginBottom:12}}>
                       {(["mantiq","sonli","fazoviy","diqqat"] as const).map(bk=>{
                         const b = iqRes.bloklarRaw[bk]; const pct = Math.round(iqRes.bloklar[bk]);
                         return (
@@ -1526,7 +1549,7 @@ export default function App(){
                       </select>
                     </div>
                   </div>
-                )}
+                );})()}
 
                 {/* Personal block */}
                 {pRes && (
@@ -1654,7 +1677,15 @@ export default function App(){
           if(skey==="alcana"){questionsSrc=mapMlQs(QS_ALCANA);sourceLabel=m.section_label||"Alcana";}
           else if(skey==="umumiy"){questionsSrc=mapMlQs([...QS_UMUMIY, ...QS_ALCANA]);sourceLabel=m.section_label||"Umumiy";}
           else if(skey==="amocrm"){questionsSrc=mapMlQs(QS_AMOCRM);sourceLabel=m.section_label||"amoCRM";}
-          else if(skey==="iq"){questionsSrc=QS_IQ.map(iq=>({q:pickMl(iq.q),opts:iq.opts.map(pickMl),ans:iq.ans,svg:iq.svg}));sourceLabel=m.section_label||"IQ test";}
+          else if(skey==="iq"){
+            questionsSrc = IQ_DATA.savollar.map(it=>({
+              q: lang==="uz-cyrl" ? toCyrl(it.savol) : it.savol,
+              opts: it.variantlar.map(v=> lang==="uz-cyrl" ? toCyrl(v) : v),
+              ans: it.togri,
+              svg: it.rasm_svg,
+            }));
+            sourceLabel = m.section_label||"IQ test";
+          }
           else if(skey.startsWith("personal:")){
             const modKey = skey.slice("personal:".length);
             const core = QS_PERSONAL.find(mm=>mm.key==="core");

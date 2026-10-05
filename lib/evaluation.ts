@@ -2,7 +2,8 @@
 // Uses stored meta (answers by index in shuffled display order + shuffles) and the
 // question source in lib/newQuestions.ts to compute per-role recommendations.
 
-import { QS_IQ, QS_PERSONAL, XISLAT_NAMES, RED_FLAG_IDS, type Ml } from "./newQuestions";
+import { QS_PERSONAL, XISLAT_NAMES, RED_FLAG_IDS, type Ml } from "./newQuestions";
+import { IQ_DATA, baholashIQ, type IqResultNew, type IqBand } from "./iqScoring";
 
 export type Lang = "uz" | "uz-cyrl" | "ru" | "en";
 
@@ -47,61 +48,53 @@ function unshuffleAnswers(answers: Record<string, any>, shuffles: number[][] | n
   return out;
 }
 
-// ─── IQ EVALUATION ──────────────────────────────────────────
+// ─── IQ EVALUATION (50-item test; raw% → 55..145 IQ scale) ──
 export type IqBlock = "mantiq" | "sonli" | "fazoviy" | "diqqat";
 
+// Legacy shape kept for the admin UI, extended with the new IQ-scale fields.
 export type IqResult = {
   togri: number;
   jami: number;
   umumiyPct: number;
-  umumiyBand: "Yuqori" | "Yaxshi" | "O'rtacha" | "Past" | "Juda past";
-  taqiq: boolean;
-  bloklar: Record<IqBlock, number>; // percent per block
+  iq: number;                                      // 55..145 scaled score
+  band: IqBand;                                    // 3-color band (yashil/sariq/qizil)
+  umumiyBand: "Yuqori" | "O'rtacha" | "Past";      // mirrors band.nom for the old UI
+  taqiq: boolean;                                  // true when IQ < 90 (red band)
+  bloklar: Record<IqBlock, number>;
   bloklarRaw: Record<IqBlock, { togri: number; jami: number }>;
   rollar: Record<string, { ball: number; holat: "MOS" | "CHEGARA" | "KUCHSIZ" }>;
   engMos: string;
 };
 
 export function evaluateIq(meta: any): IqResult {
+  // The IQ attempt stores answers keyed by index-in-shuffled-display-order. We un-shuffle to
+  // the original item index, then look the picked value up against the authoritative data in
+  // iqData.json. This way the admin UI never depends on the question source living in two places.
   const shuffles: number[][] | null = meta?.shuffles || null;
   const answers = meta?.answers || {};
-  const unshuffled = unshuffleAnswers(answers, shuffles, QS_IQ.length);
-
-  const bloklarRaw: Record<IqBlock, { togri: number; jami: number }> = {
-    mantiq: { togri: 0, jami: 0 }, sonli: { togri: 0, jami: 0 },
-    fazoviy: { togri: 0, jami: 0 }, diqqat: { togri: 0, jami: 0 },
-  };
-  let togri = 0;
-  QS_IQ.forEach((q, i) => {
-    bloklarRaw[q.blok].jami++;
-    if (unshuffled[i] === q.ans) { bloklarRaw[q.blok].togri++; togri++; }
+  const items = IQ_DATA.savollar;
+  const unshuffled = unshuffleAnswers(answers, shuffles, items.length);
+  const javoblar: Record<string, number> = {};
+  items.forEach((q, i) => {
+    const v = unshuffled[i];
+    if (v != null) javoblar[q.id] = v;
   });
-  const bloklar: Record<IqBlock, number> = { mantiq: 0, sonli: 0, fazoviy: 0, diqqat: 0 };
+  const r = baholashIQ(javoblar);
+  const umumiyBand: IqResult["umumiyBand"] = r.band.nom as IqResult["umumiyBand"];
+  // "Taqiq" (do-not-hire floor) now mirrors the red band — IQ below 90.
+  const taqiq = r.band.rang === "qizil";
+  // Remap bloklarRaw from {t,n} (new scoring API) to {togri,jami} (admin UI shape).
+  const bloklarRaw: IqResult["bloklarRaw"] = { mantiq:{togri:0,jami:0}, sonli:{togri:0,jami:0}, fazoviy:{togri:0,jami:0}, diqqat:{togri:0,jami:0} };
   (Object.keys(bloklarRaw) as IqBlock[]).forEach(k => {
-    const b = bloklarRaw[k];
-    bloklar[k] = b.jami ? (b.togri / b.jami) * 100 : 0;
+    const raw = (r.bloklarRaw as any)[k] || {};
+    bloklarRaw[k] = { togri: raw.t ?? 0, jami: raw.n ?? 0 };
   });
-
-  const umumiyPct = (togri / QS_IQ.length) * 100;
-  const umumiyBand: IqResult["umumiyBand"] =
-    umumiyPct >= 80 ? "Yuqori" :
-    umumiyPct >= 65 ? "Yaxshi" :
-    umumiyPct >= 50 ? "O'rtacha" :
-    umumiyPct >= 40 ? "Past" : "Juda past";
-  const taqiq = umumiyPct < EVAL_CONFIG.iq.umumiyPol;
-
-  const rollar: IqResult["rollar"] = {};
-  for (const [rol, weights] of Object.entries(EVAL_CONFIG.iq.roles)) {
-    let ball = 0;
-    for (const [blok, w] of Object.entries(weights)) ball += w * bloklar[blok as IqBlock];
-    const holat =
-      ball >= EVAL_CONFIG.iq.moslikMos ? "MOS" :
-      ball >= EVAL_CONFIG.iq.moslikChegara ? "CHEGARA" : "KUCHSIZ";
-    rollar[rol] = { ball: Math.round(ball), holat };
-  }
-  const engMos = Object.entries(rollar).sort((a, b) => b[1].ball - a[1].ball)[0][0];
-
-  return { togri, jami: QS_IQ.length, umumiyPct: Math.round(umumiyPct), umumiyBand, taqiq, bloklar, bloklarRaw, rollar, engMos };
+  return {
+    togri: r.togri, jami: r.jami, umumiyPct: r.foiz, iq: r.iq, band: r.band, umumiyBand, taqiq,
+    bloklar: r.bloklar as any,
+    bloklarRaw,
+    rollar: r.rollar, engMos: r.engMos,
+  };
 }
 
 // ─── PERSONAL / FAROSAT EVALUATION ──────────────────────────
@@ -182,9 +175,9 @@ export type Recommendation = {
 export function combinedRecommendation(iq: IqResult | null, personal: PersonalResult | null, targetRole: string | null): Recommendation {
   if (iq && iq.taqiq) {
     return { verdict: "OLINMAYDI", color: "red", reason: {
-      uz: `Aqliy salohiyat pol dan past (${iq.umumiyPct}%).`,
-      ru: `Умственный потенциал ниже порога (${iq.umumiyPct}%).`,
-      en: `Cognitive score below floor (${iq.umumiyPct}%).`,
+      uz: `Aqliy salohiyat past bandda — IQ ≈ ${iq.iq} (${iq.togri}/${iq.jami}).`,
+      ru: `Умственный потенциал в красной зоне — IQ ≈ ${iq.iq} (${iq.togri}/${iq.jami}).`,
+      en: `Cognitive score in red band — IQ ≈ ${iq.iq} (${iq.togri}/${iq.jami}).`,
     }};
   }
   if (personal && personal.redFlags.length > 0) {
